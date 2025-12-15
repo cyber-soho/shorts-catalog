@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Open-Source Firewalls - Course Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f5f5f4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d6d3d1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a29e;
+        }
+
+        /* Animation utilities */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Packet Animation for Simulator */
+        .packet {
+            transition: all 1s ease-in-out;
+        }
+        .packet-move {
+            transform: translateX(200px);
+            opacity: 0;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Stone) & Orange (Fire/Security). 
+         Background: Stone-50 (#fafaf9), Text: Stone-800 (#292524), Primary Accent: Orange-600 (#ea580c).
+         This creates a "calm but alert" atmosphere suitable for a security course. -->
+    
+    <!-- Application Structure Plan: 
+         1. 'Dashboard': High-level stats, Target Audience, and Methodology breakdown (Theory vs Lab).
+         2. 'Module Map': Interactive timeline of the 4 key modules (Linux Kernel, pfSense, OPNsense, IPFire).
+         3. 'Firewall Matrix': A comparative analysis tool allowing users to filter/highlight the differences between the 3 main distributions taught.
+         4. 'Rule Builder': A conceptual interactive lab simulator to demonstrate the logic of Module 1 (iptables/nftables) and Module 2 rules.
+         
+         This structure moves from "Overview" -> "Specific Content" -> "Comparative Analysis" -> "Practical Application".
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Methodology Doughnut Chart: Visualizes the 30/70 split immediately, emphasizing the "Hands-on" nature.
+         2. Interactive Cards: Used for Modules to hide/show complex sub-bullets (Iptables vs Nftables details).
+         3. Comparison Table with Highlights: For Module 3 (OPNsense vs pfSense) & Module 4 (IPFire), comparing OS, Features, and Use Cases.
+         4. Simulation Input: Simple form inputs to simulate "Packet Filtering" logic (Accept/Drop), reinforcing Module 1 concepts.
+         5. Icons: Unicode characters (🛡️, 🧱, ⚡) to maintain the No-SVG rule while adding visual cues.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans antialiased selection:bg-orange-200 selection:text-orange-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🔥</span>
+                    <h1 class="font-bold text-xl text-stone-700 tracking-tight hidden sm:block">Adv. Open-Source Firewalls</h1>
+                    <h1 class="font-bold text-xl text-stone-700 tracking-tight sm:hidden">Firewall Ops</h1>
+                </div>
+                <div class="flex space-x-2 sm:space-x-4 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors whitespace-nowrap">Dashboard</button>
+                    <button onclick="app.navigate('modules')" id="nav-modules" class="px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors whitespace-nowrap">Curriculum</button>
+                    <button onclick="app.navigate('matrix')" id="nav-matrix" class="px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors whitespace-nowrap">Distro Matrix</button>
+                    <button onclick="app.navigate('simulator')" id="nav-simulator" class="px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors whitespace-nowrap">Rule Sim</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-900 text-stone-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium text-stone-300">Advanced Unix-like Open-Source Firewalls</p>
+            <p class="text-xs mt-2">24 Hours • Non-Credited • Emplois-Québec Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        // --- Course Data ---
+        const courseData = {
+            meta: {
+                title: "Advanced Unix-like Open-Source Firewalls",
+                duration: "24 Hours",
+                audience: ["Network Administrators", "System Administrators", "Cybersecurity Specialists", "IT Infrastructure Pros"],
+                methodology: { theory: 30, lab: 70 }
+            },
+            modules: [
+                {
+                    id: 1,
+                    title: "The Foundation: Linux Packet Filtering",
+                    hours: 6,
+                    icon: "🐧",
+                    color: "border-yellow-500",
+                    desc: "Kernel-level control. The raw power behind the GUIs.",
+                    topics: [
+                        { header: "Iptables", items: ["Chains (INPUT/OUTPUT/FORWARD)", "Tables (Filter, NAT)", "Stateful Inspection", "Source/Dest NAT"] },
+                        { header: "Nftables (Modern)", items: ["Syntax & Performance", "Dynamic Sets", "Rate Limiting", "Auditing/Logging"] }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "The Industry Standard: pfSense",
+                    hours: 6,
+                    icon: "🛡️",
+                    color: "border-blue-500",
+                    desc: "FreeBSD-based enterprise edge security.",
+                    topics: [
+                        { header: "Core Config", items: ["FreeBSD Basics", "Interface Assignment (WAN/LAN)", "Dashboard Setup"] },
+                        { header: "Services", items: ["Aliases & Floating Rules", "DHCP Server", "Unbound DNS Resolver"] },
+                        { header: "Advanced", items: ["VPNs (OpenVPN/IPsec)", "Traffic Shaping (QoS)", "Multi-WAN Load Balancing"] }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "The Modern Fork: OPNsense",
+                    hours: 6,
+                    icon: "⚡",
+                    color: "border-orange-500",
+                    desc: "Modern UI, MVC framework, and security plugins.",
+                    topics: [
+                        { header: "UX & Architecture", items: ["MVC Framework", "Plugin Management", "Firmware Updates"] },
+                        { header: "Security", items: ["IDS/IPS (Suricata)", "GeoIP Blocking", "Reputation Filtering"] },
+                        { header: "High Availability", items: ["CARP Failover", "XMLRPC Sync"] }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Lightweight Defense: IPFire & Strategy",
+                    hours: 6,
+                    icon: "🔥",
+                    color: "border-red-500",
+                    desc: "Hardened Linux appliance and network segmentation.",
+                    topics: [
+                        { header: "Administration", items: ["Color Coded Network Model", "Pakfire Package Manager", "Web Proxy/URL Filter"] },
+                        { header: "Strategy", items: ["Hardware Sizing", "Appliance Hardening", "Log Analysis & Troubleshooting"] }
+                    ]
+                }
+            ],
+            matrix: [
+                { aspect: "OS Base", pf: "FreeBSD", opn: "HardenedBSD (FreeBSD fork)", ipf: "Linux (Custom)" },
+                { aspect: "Packet Filter", pf: "pf (Packet Filter)", opn: "pf (Packet Filter)", ipf: "iptables" },
+                { aspect: "UI/UX", pf: "Legacy / Functional", opn: "Modern / MVC", ipf: "Simple / Color-Coded" },
+                { aspect: "Focus", pf: "Enterprise Stability", opn: "Features & Plugins", ipf: "Lightweight / Security" },
+                { aspect: "Key Feature", pf: "pfioc / Stability", opn: "Suricata Integration", ipf: "Pakfire System" }
+            ]
+        };
+
+        // --- App Logic ---
+        const app = {
+            view: 'dashboard',
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'modules': this.renderModules(wrapper); break;
+                    case 'matrix': this.renderMatrix(wrapper); break;
+                    case 'simulator': this.renderSimulator(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'modules', 'matrix', 'simulator'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors whitespace-nowrap border border-orange-200 shadow-sm";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                // Header
+                container.innerHTML = `
+                    <div class="mb-10 text-center sm:text-left">
+                        <h2 class="text-4xl font-bold text-stone-800 mb-3">Course Overview</h2>
+                        <p class="text-lg text-stone-600 max-w-3xl leading-relaxed">
+                            An intensive 24-hour technical workshop focusing on deploying, configuring, and hardening 
+                            Unix-like open-source firewalls. Master <strong>pfSense, OPNsense, IPFire</strong>, and kernel-level packet filtering.
+                        </p>
+                    </div>
+                `;
+
+                // Metrics Grid
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10";
+                
+                const stats = [
+                    { label: "Duration", val: "24 Hours", icon: "⏱️" },
+                    { label: "Format", val: "Non-Credited", icon: "🎓" },
+                    { label: "Modules", val: "4 Core Units", icon: "📦" },
+                    { label: "Lab Focus", val: "70% Practical", icon: "🧪" }
+                ];
+
+                stats.forEach(s => {
+                    grid.innerHTML += `
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-stone-200 flex items-center hover:shadow-md transition-shadow">
+                            <span class="text-3xl mr-4 bg-stone-50 p-2 rounded-lg">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-stone-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-lg font-bold text-stone-800">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(grid);
+
+                // Main Content Area
+                const mainLayout = document.createElement('div');
+                mainLayout.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Audience & Objectives
+                const textCol = document.createElement('div');
+                textCol.className = "lg:col-span-2 space-y-8";
+                textCol.innerHTML = `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h3 class="text-xl font-bold text-stone-800 mb-4 flex items-center">
+                            <span class="bg-orange-100 text-orange-600 p-1 rounded mr-3 text-sm">👥</span> Target Audience
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            ${courseData.meta.audience.map(a => 
+                                `<span class="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm font-medium border border-stone-200">${a}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h3 class="text-xl font-bold text-stone-800 mb-4 flex items-center">
+                            <span class="bg-orange-100 text-orange-600 p-1 rounded mr-3 text-sm">🎯</span> Key Competencies
+                        </h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start"><span class="text-orange-500 mr-2 mt-1">✓</span><span class="text-stone-600">Configure low-level packet filtering (iptables/nftables).</span></li>
+                            <li class="flex items-start"><span class="text-orange-500 mr-2 mt-1">✓</span><span class="text-stone-600">Deploy enterprise edge security with pfSense.</span></li>
+                            <li class="flex items-start"><span class="text-orange-500 mr-2 mt-1">✓</span><span class="text-stone-600">Administer OPNsense with Suricata IDS/IPS.</span></li>
+                            <li class="flex items-start"><span class="text-orange-500 mr-2 mt-1">✓</span><span class="text-stone-600">Design secure network zones (DMZ, LAN, WAN).</span></li>
+                        </ul>
+                    </div>
+                `;
+
+                // Methodology Chart
+                const chartCol = document.createElement('div');
+                chartCol.className = "bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col";
+                chartCol.innerHTML = `
+                    <h3 class="text-lg font-bold text-stone-800 mb-2">Teaching Methodology</h3>
+                    <p class="text-sm text-stone-500 mb-6">Heavy emphasis on virtual lab deployment.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                mainLayout.appendChild(textCol);
+                mainLayout.appendChild(chartCol);
+                container.appendChild(mainLayout);
+
+                // Draw Chart
+                setTimeout(() => {
+                    const ctx = document.getElementById('methodChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory', 'Practical Labs'],
+                            datasets: [{
+                                data: [30, 70],
+                                backgroundColor: ['#d6d3d1', '#ea580c'], // Stone-300, Orange-600
+                                borderWidth: 0,
+                                hoverOffset: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderModules(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-stone-800">Curriculum Map</h2>
+                        <p class="text-lg text-stone-600 mt-2">
+                            Explore the 4 core modules. Each module is 6 hours long and builds from kernel fundamentals to appliance strategy.
+                        </p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
+
+                courseData.modules.forEach(mod => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white rounded-xl shadow-sm border-l-4 ${mod.color} p-6 hover:shadow-md transition-shadow cursor-pointer group`;
+                    
+                    // Header
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl bg-stone-50 p-2 rounded-lg group-hover:bg-stone-100 transition-colors">${mod.icon}</span>
+                                <div>
+                                    <h3 class="font-bold text-lg text-stone-800">Module ${mod.id}</h3>
+                                    <p class="text-xs text-stone-500 font-mono">6 HOURS</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h4 class="text-xl font-bold text-stone-800 mb-2">${mod.title}</h4>
+                        <p class="text-stone-600 text-sm mb-4">${mod.desc}</p>
+                        
+                        <div class="border-t border-stone-100 pt-4 space-y-4">
+                            ${mod.topics.map(t => `
+                                <div>
+                                    <h5 class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">${t.header}</h5>
+                                    <ul class="text-sm text-stone-700 space-y-1">
+                                        ${t.items.map(i => `<li class="flex items-start"><span class="mr-2 text-stone-300">•</span>${i}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+            },
+
+            renderMatrix(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-stone-800">Distro Matrix</h2>
+                        <p class="text-lg text-stone-600 mt-2">
+                            Compare the three major open-source firewalls covered in Modules 2, 3, and 4.
+                        </p>
+                    </div>
+                `;
+
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = "bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden";
+                
+                tableWrapper.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-stone-800 text-stone-100 text-sm uppercase tracking-wider">
+                                    <th class="p-4 border-b border-stone-700 w-1/4">Feature / Aspect</th>
+                                    <th class="p-4 border-b border-stone-700 w-1/4 bg-blue-900">pfSense (Mod 2)</th>
+                                    <th class="p-4 border-b border-stone-700 w-1/4 bg-orange-900">OPNsense (Mod 3)</th>
+                                    <th class="p-4 border-b border-stone-700 w-1/4 bg-red-900">IPFire (Mod 4)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm text-stone-700 divide-y divide-stone-100">
+                                ${courseData.matrix.map(row => `
+                                    <tr class="hover:bg-stone-50 transition-colors">
+                                        <td class="p-4 font-bold text-stone-900 bg-stone-50">${row.aspect}</td>
+                                        <td class="p-4">${row.pf}</td>
+                                        <td class="p-4">${row.opn}</td>
+                                        <td class="p-4">${row.ipf}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 bg-stone-50 border-t border-stone-200 text-xs text-stone-500">
+                        * All three solutions will be deployed in the virtual lab environment.
+                    </div>
+                `;
+
+                container.appendChild(tableWrapper);
+
+                // Network Zones Visual
+                const zonesDiv = document.createElement('div');
+                zonesDiv.className = "mt-8 bg-white p-6 rounded-xl shadow-sm border border-stone-200";
+                zonesDiv.innerHTML = `
+                    <h3 class="font-bold text-lg text-stone-800 mb-4">IPFire Color Coded Network Model</h3>
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        <div class="w-24 h-24 bg-red-100 border-2 border-red-500 rounded-lg flex flex-col items-center justify-center text-center p-2">
+                            <span class="text-2xl">🔴</span>
+                            <span class="font-bold text-red-700 text-xs mt-1">RED</span>
+                            <span class="text-[10px] text-red-600">Internet / WAN</span>
+                        </div>
+                        <div class="w-24 h-24 bg-green-100 border-2 border-green-500 rounded-lg flex flex-col items-center justify-center text-center p-2">
+                            <span class="text-2xl">🟢</span>
+                            <span class="font-bold text-green-700 text-xs mt-1">GREEN</span>
+                            <span class="text-[10px] text-green-600">Safe / LAN</span>
+                        </div>
+                        <div class="w-24 h-24 bg-orange-100 border-2 border-orange-500 rounded-lg flex flex-col items-center justify-center text-center p-2">
+                            <span class="text-2xl">🟠</span>
+                            <span class="font-bold text-orange-700 text-xs mt-1">ORANGE</span>
+                            <span class="text-[10px] text-orange-600">DMZ / Servers</span>
+                        </div>
+                        <div class="w-24 h-24 bg-blue-100 border-2 border-blue-500 rounded-lg flex flex-col items-center justify-center text-center p-2">
+                            <span class="text-2xl">🔵</span>
+                            <span class="font-bold text-blue-700 text-xs mt-1">BLUE</span>
+                            <span class="text-[10px] text-blue-600">Wireless</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(zonesDiv);
+            },
+
+            renderSimulator(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-stone-800">Rule Simulator (Module 1)</h2>
+                        <p class="text-lg text-stone-600 mt-2">
+                            Visualize how kernel-level packet filtering (iptables/nftables) works. 
+                            Define a rule and send a packet to see if it gets <strong>ACCEPTED</strong> or <strong>DROPPED</strong>.
+                        </p>
+                    </div>
+                `;
+
+                const simContainer = document.createElement('div');
+                simContainer.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Controls
+                const controls = document.createElement('div');
+                controls.className = "bg-stone-800 text-stone-200 p-6 rounded-xl shadow-lg";
+                controls.innerHTML = `
+                    <h3 class="font-bold text-stone-100 mb-4 border-b border-stone-600 pb-2">Firewall Configuration</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Default Policy</label>
+                            <select id="sim-policy" class="w-full bg-stone-900 border border-stone-700 rounded p-2 text-sm text-stone-200">
+                                <option value="DROP">DROP (Block All)</option>
+                                <option value="ACCEPT">ACCEPT (Allow All)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Rule: Port 80 (HTTP)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="sim-rule-80" class="w-4 h-4 text-orange-600 bg-stone-700 border-stone-500 rounded focus:ring-orange-500">
+                                <span class="text-sm">Allow TCP Port 80</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Rule: Port 22 (SSH)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="sim-rule-22" class="w-4 h-4 text-orange-600 bg-stone-700 border-stone-500 rounded focus:ring-orange-500">
+                                <span class="text-sm">Allow TCP Port 22</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-stone-700">
+                            <label class="block text-xs font-bold uppercase text-stone-500 mb-1">Incoming Packet Port</label>
+                            <select id="sim-packet-port" class="w-full bg-stone-900 border border-stone-700 rounded p-2 text-sm text-stone-200 mb-3">
+                                <option value="80">Port 80 (Web)</option>
+                                <option value="22">Port 22 (SSH)</option>
+                                <option value="23">Port 23 (Telnet)</option>
+                            </select>
+                            <button onclick="app.runPacket()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                                Send Packet
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Visualization Area
+                const visual = document.createElement('div');
+                visual.className = "lg:col-span-2 bg-white rounded-xl shadow-sm border border-stone-200 p-8 flex flex-col justify-center items-center relative overflow-hidden min-h-[300px]";
+                visual.innerHTML = `
+                    <div class="flex justify-between w-full max-w-lg mb-12 relative z-10">
+                        <div class="text-center">
+                            <div class="text-3xl">🌐</div>
+                            <div class="text-xs font-bold text-stone-400 mt-1">WAN</div>
+                        </div>
+                        
+                        <!-- Firewall Box -->
+                        <div class="bg-stone-100 border-2 border-stone-300 p-4 rounded-lg w-48 text-center relative">
+                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-xs font-bold text-stone-500">KERNEL FILTER</div>
+                            <div class="text-4xl mb-2">🛡️</div>
+                            <div id="firewall-status" class="text-xs font-mono font-bold text-stone-600">WAITING...</div>
+                        </div>
+
+                        <div class="text-center">
+                            <div class="text-3xl">💻</div>
+                            <div class="text-xs font-bold text-stone-400 mt-1">LAN</div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Feedback -->
+                    <div id="sim-result" class="text-center h-12"></div>
+                `;
+
+                simContainer.appendChild(controls);
+                simContainer.appendChild(visual);
+                container.appendChild(simContainer);
+            },
+
+            runPacket() {
+                const policy = document.getElementById('sim-policy').value;
+                const allow80 = document.getElementById('sim-rule-80').checked;
+                const allow22 = document.getElementById('sim-rule-22').checked;
+                const packetPort = document.getElementById('sim-packet-port').value;
+                
+                const status = document.getElementById('firewall-status');
+                const result = document.getElementById('sim-result');
+
+                status.innerText = "INSPECTING...";
+                result.innerHTML = `<div class="text-stone-400">Packet arriving on port ${packetPort}...</div>`;
+
+                // Logic
+                let accepted = false;
+
+                // 1. Check Specific Rules First
+                if (packetPort === "80" && allow80) accepted = true;
+                else if (packetPort === "22" && allow22) accepted = true;
+                else {
+                    // 2. Fallback to Policy
+                    if (policy === "ACCEPT") accepted = true;
+                    else accepted = false;
+                }
+
+                setTimeout(() => {
+                    if (accepted) {
+                        status.innerText = "FORWARD";
+                        status.className = "text-xs font-mono font-bold text-green-600";
+                        result.innerHTML = `
+                            <div class="bg-green-100 text-green-800 px-4 py-2 rounded-full font-bold inline-flex items-center animate-bounce">
+                                <span class="mr-2">✓</span> PACKET ACCEPTED
+                            </div>
+                        `;
+                    } else {
+                        status.innerText = "DROP";
+                        status.className = "text-xs font-mono font-bold text-red-600";
+                        result.innerHTML = `
+                            <div class="bg-red-100 text-red-800 px-4 py-2 rounded-full font-bold inline-flex items-center animate-bounce">
+                                <span class="mr-2">✕</span> PACKET DROPPED
+                            </div>
+                        `;
+                    }
+                }, 800);
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
+
+
+
+
+

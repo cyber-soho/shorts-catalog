@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Cloud Architectures - Interactive Course Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cloud Float Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .float-anim {
+            animation: float 4s ease-in-out infinite;
+        }
+    </style>
+    <!-- Chosen Palette: "Sky & Stratosphere". 
+         Background: Slate-50 (Neutral, professional foundation).
+         Primary: Sky-600 (Represents "Cloud").
+         Accents: 
+            - Orange-500 (AWS)
+            - Blue-600 (Azure)
+            - Red-500 (GCP)
+            - Amber-600 (Alibaba)
+            - Rose-600 (OpenStack)
+         This palette uses brand-aligned colors to create immediate visual recognition for each cloud provider.
+    -->
+    
+    <!-- Application Structure Plan:
+         1. Dashboard (The Stratosphere): High-level overview of the course structure, audience, and methodology.
+         2. Cloud Matrix (The Providers): An interactive grid where users explore the 5 platforms (AWS, Azure, GCP, Alibaba, OpenStack). Clicking a provider reveals specific curriculum details.
+         3. Feature Comparator (Head-to-Head): A tool to compare key concepts (e.g., EC2 vs VM vs ECS) across the platforms, reinforcing the "Comparative Architecture" methodology.
+         4. Deployment Simulator (Launch Pad): A mock console to visualize the provisioning workflow, giving a taste of the "Practical Labs".
+         
+         The structure is designed to move from general knowledge -> specific platform deep dives -> comparative analysis -> practical application.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology Chart: Doughnut chart clearly showing the 40/60 Theory/Lab split.
+         - Provider Cards: Interactive elements that expand to show module details.
+         - Comparison Table: Dynamic table that filters based on the selected service category (Compute, Storage, Network).
+         - Mock Console: A simplified UI simulation to demonstrate "Launching an Instance" without needing real credentials.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-sky-200 selection:text-sky-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl float-anim">☁️</span>
+                    <div>
+                        <h1 class="font-bold text-xl text-slate-800 tracking-tight">MultiCloud<span class="text-sky-600">.Architect</span></h1>
+                        <p class="text-[10px] text-slate-500 font-mono hidden sm:block">AWS • AZURE • GCP • ALIBABA • OPENSTACK</p>
+                    </div>
+                </div>
+                <div class="flex space-x-1 sm:space-x-4 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-sky-700 bg-sky-50 border border-sky-200 transition-colors whitespace-nowrap">Dashboard</button>
+                    <button onclick="app.navigate('providers')" id="nav-providers" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Providers</button>
+                    <button onclick="app.navigate('compare')" id="nav-compare" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Compare</button>
+                    <button onclick="app.navigate('lab')" id="nav-lab" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Lab Sim</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium text-slate-300">Multi-Cloud Architectures Course</p>
+            <p class="text-xs mt-2 opacity-60">30 Hours • Non-Credited • Emplois-Québec Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "Multi-Cloud Architectures",
+                duration: "30 Hours",
+                audience: ["System Administrators", "Network Engineers", "IT Architects"],
+                methodology: { theory: 40, lab: 60 }
+            },
+            modules: [
+                {
+                    id: 1,
+                    title: "The Market Leader: AWS",
+                    hours: 6,
+                    provider: "Amazon Web Services",
+                    icon: "🔶",
+                    color: "border-orange-500",
+                    bg: "bg-orange-50",
+                    topics: [
+                        { cat: "Compute", items: ["EC2 Instances", "AMI Management"] },
+                        { cat: "Network", items: ["VPC Configuration", "Security Groups"] },
+                        { cat: "Storage", items: ["S3 Buckets", "Lifecycle Policies"] },
+                        { cat: "Identity", items: ["IAM Users", "Roles & Policies"] }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "The Enterprise Cloud: Azure",
+                    hours: 6,
+                    provider: "Microsoft Azure",
+                    icon: "🔷",
+                    color: "border-blue-600",
+                    bg: "bg-blue-50",
+                    topics: [
+                        { cat: "Management", items: ["Resource Groups", "ARM Templates"] },
+                        { cat: "Compute", items: ["Windows/Linux VMs"] },
+                        { cat: "Network", items: ["VNet Peering", "NSGs"] },
+                        { cat: "Identity", items: ["Entra ID (Azure AD)"] }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Data & Innovation: GCP",
+                    hours: 6,
+                    provider: "Google Cloud Platform",
+                    icon: "🔴",
+                    color: "border-red-500",
+                    bg: "bg-red-50",
+                    topics: [
+                        { cat: "Compute", items: ["Google Compute Engine", "Preemptible VMs"] },
+                        { cat: "Network", items: ["Global VPCs", "Load Balancing"] },
+                        { cat: "Storage", items: ["Cloud Storage Classes", "Nearline/Coldline"] }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "The Global Bridge: Alibaba",
+                    hours: 6,
+                    provider: "Alibaba Cloud",
+                    icon: "🟠",
+                    color: "border-amber-600",
+                    bg: "bg-amber-50",
+                    topics: [
+                        { cat: "Ecosystem", items: ["Alibaba Console", "Asian Market Compliance"] },
+                        { cat: "Compute", items: ["Elastic Compute Service (ECS)"] },
+                        { cat: "Global", items: ["Object Storage (OSS)", "Global CDN"] }
+                    ]
+                },
+                {
+                    id: 5,
+                    title: "The Private Cloud: OpenStack",
+                    hours: 6,
+                    provider: "OpenStack",
+                    icon: "🌹",
+                    color: "border-rose-600",
+                    bg: "bg-rose-50",
+                    topics: [
+                        { cat: "Architecture", items: ["Nova (Compute)", "Neutron (Net)", "Glance (Image)"] },
+                        { cat: "Economics", items: ["Private vs Public Cloud"] },
+                        { cat: "Management", items: ["Horizon Dashboard", "Tenant Quotas"] }
+                    ]
+                }
+            ],
+            comparisons: {
+                compute: { label: "Virtual Machine", aws: "EC2 Instance", azure: "Virtual Machine", gcp: "Compute Engine", ali: "ECS Instance", open: "Nova Instance" },
+                storage: { label: "Object Storage", aws: "S3", azure: "Blob Storage", gcp: "Cloud Storage", ali: "OSS", open: "Swift" },
+                network: { label: "Virtual Network", aws: "VPC", azure: "VNet", gcp: "VPC Network", ali: "VPC", open: "Neutron Network" },
+                firewall: { label: "Firewall", aws: "Security Group", azure: "NSG", gcp: "Firewall Rules", ali: "Security Group", open: "Security Group" },
+                identity: { label: "Identity", aws: "IAM", azure: "Entra ID", gcp: "Cloud IAM", ali: "RAM", open: "Keystone" }
+            }
+        };
+
+        const app = {
+            view: 'dashboard',
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'providers': this.renderProviders(wrapper); break;
+                    case 'compare': this.renderCompare(wrapper); break;
+                    case 'lab': this.renderLab(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'providers', 'compare', 'lab'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-sky-700 bg-sky-50 border border-sky-200 transition-colors whitespace-nowrap shadow-sm";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                container.innerHTML = `
+                    <div class="mb-10 text-center">
+                        <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Master the Multi-Cloud Strategy</h2>
+                        <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                            A comprehensive 30-hour workshop comparing the world's leading public cloud providers and the industry-standard private cloud platform.
+                        </p>
+                    </div>
+                `;
+
+                // Stats Grid
+                const statsGrid = document.createElement('div');
+                statsGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10";
+                
+                const stats = [
+                    { label: "Total Duration", val: "30 Hours", icon: "⏱️" },
+                    { label: "Platforms", val: "5 Clouds", icon: "🌐" },
+                    { label: "Format", val: "Non-Credited", icon: "🎓" },
+                    { label: "Lab Focus", val: "60% Practical", icon: "🔧" }
+                ];
+
+                stats.forEach(s => {
+                    statsGrid.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
+                            <span class="text-3xl bg-slate-50 p-3 rounded-lg">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-2xl font-bold text-slate-800">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(statsGrid);
+
+                // Content Split
+                const layout = document.createElement('div');
+                layout.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Audience & Objectives
+                const infoCard = document.createElement('div');
+                infoCard.className = "lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-8";
+                infoCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
+                        <span class="bg-sky-100 text-sky-600 p-1 rounded mr-3 text-sm">🎯</span> Learning Objectives
+                    </h3>
+                    <div class="space-y-4">
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Deploy & Secure VMs across all 5 platforms.
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Configure VPCs & Network Security Groups.
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Compare Object, Block, and File storage.
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Understand OpenStack Private Cloud Architecture.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase mb-2">Target Audience</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-medium">System Administrators</span>
+                            <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-medium">Network Engineers</span>
+                            <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-medium">IT Architects</span>
+                        </div>
+                    </div>
+                `;
+
+                // Chart
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col";
+                chartCard.innerHTML = `
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Teaching Methodology</h3>
+                    <p class="text-sm text-slate-500 mb-4">Balance of architectural theory and console practice.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                layout.appendChild(infoCard);
+                layout.appendChild(chartCard);
+                container.appendChild(layout);
+
+                // Render Chart
+                setTimeout(() => {
+                    new Chart(document.getElementById('methodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory', 'Practical Labs'],
+                            datasets: [{
+                                data: [40, 60],
+                                backgroundColor: ['#94a3b8', '#0ea5e9'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderProviders(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">Provider Curriculum</h2>
+                        <p class="text-slate-600 mt-2">Explore the 5 modules, each dedicated to a major cloud ecosystem.</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+
+                courseData.modules.forEach(mod => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white border-t-4 ${mod.color} rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer group h-full flex flex-col`;
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-4xl p-2 bg-slate-50 rounded-lg">${mod.icon}</div>
+                            <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">${mod.hours} Hours</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-1">${mod.title}</h3>
+                        <p class="text-sm text-slate-500 mb-4">${mod.provider}</p>
+                        
+                        <div class="space-y-3 mt-auto">
+                            ${mod.topics.map(t => `
+                                <div>
+                                    <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">${t.cat}</h4>
+                                    <ul class="text-sm text-slate-700">
+                                        ${t.items.map(i => `<li class="flex items-center"><span class="w-1 h-1 bg-slate-400 rounded-full mr-2"></span>${i}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+            },
+
+            renderCompare(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">Feature Comparator</h2>
+                        <p class="text-slate-600 mt-2">Understand the terminology differences between vendors.</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden";
+                
+                wrapper.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-white text-sm uppercase tracking-wider">
+                                    <th class="p-4 border-b border-slate-800 w-1/6">Concept</th>
+                                    <th class="p-4 border-b border-slate-800 w-1/6 text-orange-400">AWS</th>
+                                    <th class="p-4 border-b border-slate-800 w-1/6 text-blue-400">Azure</th>
+                                    <th class="p-4 border-b border-slate-800 w-1/6 text-red-400">GCP</th>
+                                    <th class="p-4 border-b border-slate-800 w-1/6 text-amber-400">Alibaba</th>
+                                    <th class="p-4 border-b border-slate-800 w-1/6 text-rose-400">OpenStack</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-medium text-slate-700 divide-y divide-slate-100">
+                                ${Object.values(courseData.comparisons).map(row => `
+                                    <tr class="hover:bg-slate-50 transition-colors group">
+                                        <td class="p-4 font-bold text-slate-900 bg-slate-50/50">${row.label}</td>
+                                        <td class="p-4 group-hover:text-orange-600 transition-colors">${row.aws}</td>
+                                        <td class="p-4 group-hover:text-blue-600 transition-colors">${row.azure}</td>
+                                        <td class="p-4 group-hover:text-red-600 transition-colors">${row.gcp}</td>
+                                        <td class="p-4 group-hover:text-amber-600 transition-colors">${row.ali}</td>
+                                        <td class="p-4 group-hover:text-rose-600 transition-colors">${row.open}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.appendChild(wrapper);
+
+                // Context Box
+                const context = document.createElement('div');
+                context.className = "mt-6 bg-slate-100 p-6 rounded-lg border border-slate-200 flex gap-4 items-start";
+                context.innerHTML = `
+                    <div class="text-3xl">💡</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800">Why Compare?</h4>
+                        <p class="text-sm text-slate-600">
+                            Multi-cloud architects must translate requirements (e.g., "I need a VM with firewall") into specific vendor terminology 
+                            (e.g., "Launch an EC2 with a Security Group" vs "Create a Compute Engine Instance with Firewall Rules").
+                            This course builds this mental mapping.
+                        </p>
+                    </div>
+                `;
+                container.appendChild(context);
+            },
+
+            renderLab(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">Lab Simulator</h2>
+                        <p class="text-slate-600 mt-2">Experience the provisioning workflow. Select a provider to launch a Virtual Machine.</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "grid grid-cols-1 lg:grid-cols-4 gap-6";
+
+                // Sidebar controls
+                const sidebar = document.createElement('div');
+                sidebar.className = "lg:col-span-1 space-y-2";
+                
+                const providers = [
+                    { id: 'aws', name: 'AWS EC2', color: 'bg-orange-500', hover: 'hover:bg-orange-600' },
+                    { id: 'azure', name: 'Azure VM', color: 'bg-blue-600', hover: 'hover:bg-blue-700' },
+                    { id: 'gcp', name: 'GCP Instance', color: 'bg-red-500', hover: 'hover:bg-red-600' },
+                    { id: 'ali', name: 'Alibaba ECS', color: 'bg-amber-500', hover: 'hover:bg-amber-600' }
+                ];
+
+                providers.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-4 rounded-lg shadow-sm text-white font-bold transition-all ${p.color} ${p.hover} flex justify-between items-center`;
+                    btn.innerHTML = `<span>Launch ${p.name}</span> <span>➜</span>`;
+                    btn.onclick = () => this.runSimulation(p.id);
+                    sidebar.appendChild(btn);
+                });
+
+                // Console Display
+                const console = document.createElement('div');
+                console.className = "lg:col-span-3 bg-slate-900 rounded-xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col h-[400px] font-mono text-sm";
+                console.id = "cloud-console";
+                
+                console.innerHTML = `
+                    <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="text-slate-400 text-xs" id="console-header">cloud_shell_v1.0</div>
+                        <div class="w-4"></div>
+                    </div>
+                    <div class="p-6 text-slate-300 space-y-2 overflow-y-auto flex-grow" id="console-output">
+                        <div class="text-slate-500"># System Ready. Select a provider to begin provisioning...</div>
+                    </div>
+                `;
+
+                wrapper.appendChild(sidebar);
+                wrapper.appendChild(console);
+                container.appendChild(wrapper);
+            },
+
+            runSimulation(provider) {
+                const output = document.getElementById('console-output');
+                output.innerHTML = ''; // Clear
+
+                let steps = [];
+                let colorClass = "";
+
+                if (provider === 'aws') {
+                    colorClass = "text-orange-400";
+                    steps = [
+                        `$ aws ec2 run-instances --image-id ami-0abcdef1234567890`,
+                        `> Validating credentials... OK`,
+                        `> Selecting Region: us-east-1...`,
+                        `> Creating Security Group: launch-wizard-1...`,
+                        `> Launching t2.micro instance...`,
+                        `SUCCESS: Instance i-1234567890abcdef0 is PENDING.`
+                    ];
+                } else if (provider === 'azure') {
+                    colorClass = "text-blue-400";
+                    steps = [
+                        `$ az vm create --resource-group MyResourceGroup --name MyVM`,
+                        `> Authenticating with Entra ID... OK`,
+                        `> Creating Virtual Network...`,
+                        `> Creating Public IP address...`,
+                        `> Creating Network Security Group...`,
+                        `SUCCESS: VM 'MyVM' created in 'EastUS'.`
+                    ];
+                } else if (provider === 'gcp') {
+                    colorClass = "text-red-400";
+                    steps = [
+                        `$ gcloud compute instances create my-instance`,
+                        `> Project: my-multi-cloud-project...`,
+                        `> Zone: us-central1-a...`,
+                        `> Attaching Persistent Disk...`,
+                        `> Setting up Firewall Rules...`,
+                        `SUCCESS: Instance 'my-instance' is RUNNING.`
+                    ];
+                } else {
+                    colorClass = "text-amber-400";
+                    steps = [
+                        `$ aliyun ecs CreateInstance --RegionId cn-hangzhou`,
+                        `> Connecting to Alibaba Cloud Gateway...`,
+                        `> Allocating Elastic Compute Service resource...`,
+                        `> Assigning Public IP...`,
+                        `SUCCESS: ECS Instance launched in Hangzhou Zone A.`
+                    ];
+                }
+
+                let i = 0;
+                function printStep() {
+                    if (i < steps.length) {
+                        const div = document.createElement('div');
+                        if (i === 0) div.className = `font-bold ${colorClass}`;
+                        if (i === steps.length - 1) div.className = "text-green-400 font-bold mt-2";
+                        div.innerText = steps[i];
+                        output.appendChild(div);
+                        i++;
+                        setTimeout(printStep, 800);
+                    }
+                }
+                printStep();
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
+
+

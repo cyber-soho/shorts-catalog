@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Seven Steps to Self-Productivity (Offline AI)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Terminal Cursor Animation */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #10b981;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Fade/Slide Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background: linear-gradient(to right, #34d399, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+    <!-- Chosen Palette: Dark Mode "Cyberpunk/Dev" Theme. 
+         Background: Slate-900 (#0f172a) for that IDE/Terminal feel.
+         Primary: Emerald-500 (#10b981) for "Success/Online/Run".
+         Secondary: Blue-500 (#3b82f6) for "Data/Intelligence".
+         Text: Slate-100/300.
+    -->
+    
+    <!-- Application Structure Plan:
+         1. Dashboard (Home): High-level summary of the "Zero-Cloud" philosophy, stats, and methodology chart.
+         2. The 7-Step Roadmap: A linear timeline navigator. Users click a step (1-7) to see the specific tool (Ollama, Whisper, etc.) and a micro-simulation of that tool.
+         3. The "Offline Stack": A grid view of the open-source tools covered, effectively a "Tech Specs" page.
+         4. Jarvis Capstone: A dedicated "Terminal" view where users can run a simulated voice command to see the full pipeline integration.
+         
+         Design Rationale: The "Steps" structure of the report dictates a linear learning path. The UI reinforces this by unlocking knowledge sequentially or allowing random access via a roadmap. The "Dark Mode" aesthetic appeals to the "Developer/Power User" target audience designated in the report.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology: Doughnut Chart (Chart.js) to show the 30/70 split.
+         - Simulators: JS-based text replacement and CSS animations to mimic "transcription", "RAG searching", and "Image Gen" without actual backend AI, proving the concepts.
+         - Tech Stack: Card grid with Unicode icons to represent the diverse toolset (Audio, Text, Data).
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans antialiased selection:bg-emerald-500 selection:text-slate-900">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔒</span>
+                    <div>
+                        <h1 class="font-bold text-xl tracking-tight text-white">Zero-Cloud<span class="text-emerald-400">.AI</span></h1>
+                        <p class="text-[10px] text-slate-400 font-mono hidden sm:block">OFFLINE PRODUCTIVITY SUITE</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 sm:space-x-4 items-center overflow-x-auto custom-scroll">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-md text-sm font-bold text-emerald-400 bg-slate-800 border border-emerald-500/30 transition-all hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] whitespace-nowrap">Mission Control</button>
+                    <button onclick="app.navigate('roadmap')" id="nav-roadmap" class="px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">7-Step Roadmap</button>
+                    <button onclick="app.navigate('stack')" id="nav-stack" class="px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">The Stack</button>
+                    <button onclick="app.navigate('capstone')" id="nav-capstone" class="px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">Jarvis Demo</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Dynamic Content Injected Here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-500 py-8 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-mono">The Seven Steps to Self-Productivity</p>
+            <p class="text-xs mt-2 opacity-60">24 Hours • Non-Credited • Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "The Seven Steps to Self-Productivity",
+                duration: "24 Hours",
+                audience: ["Admins", "Project Managers", "Developers", "Creatives"],
+                methodology: { theory: 30, labs: 70 }
+            },
+            steps: [
+                {
+                    id: 1,
+                    title: "The Zero-Cloud Foundation",
+                    module: "Module 1: Foundations",
+                    icon: "🏗️",
+                    tools: ["Ollama", "Python", "GGUF"],
+                    desc: "Master the stack. Learn to install Ollama, set up Python environments, and understand Quantization (GGUF) to run powerful models on standard hardware.",
+                    simType: "terminal",
+                    simData: { cmd: "ollama run llama3", output: "pulling manifest... 100% \nverifying sha256 digest... \nwriting manifest... \nsuccess \n>>> Ready for input." }
+                },
+                {
+                    id: 2,
+                    title: "The Automated Scribe",
+                    module: "Module 1: Foundations",
+                    icon: "✍️",
+                    tools: ["Faster-Whisper", "Local LLM"],
+                    desc: "Meeting Intelligence. Build a pipeline to transcribe Zoom recordings locally and extract action items instantly.",
+                    simType: "scribe",
+                    simData: { audio: "[Audio File]", result: "Action Item: Update the Q3 financial forecast by Friday." }
+                },
+                {
+                    id: 3,
+                    title: "The Private Knowledge Base (RAG)",
+                    module: "Module 2: Private Data",
+                    icon: "🧠",
+                    tools: ["Phi-3.5", "Llama 3.2", "Vector DB"],
+                    desc: "Stop searching manually. Create a 'Chat with Your Documents' system to query sensitive PDFs and contracts securely.",
+                    simType: "rag",
+                    simData: { query: "What is the NDA expiry?", source: "contract_v2.pdf", answer: "The NDA expires on December 31st, 2025." }
+                },
+                {
+                    id: 4,
+                    title: "The 'Digital Twin' Voice Studio",
+                    module: "Module 3: Creative Studio",
+                    icon: "🎙️",
+                    tools: ["Kokoro", "XTTS-v2"],
+                    desc: "Generate professional voiceovers or clone your own voice to read emails aloud while you multitask.",
+                    simType: "voice",
+                    simData: { text: "Welcome to the presentation.", status: "Generating Audio Waveform..." }
+                },
+                {
+                    id: 5,
+                    title: "Instant Asset Generation",
+                    module: "Module 3: Creative Studio",
+                    icon: "🎨",
+                    tools: ["SDXL Turbo", "Flux [schnell]"],
+                    desc: "Replace stock photos. Generate infinite royalty-free slide backgrounds and icons locally in under 2 seconds.",
+                    simType: "image",
+                    simData: { prompt: "Futuristic city slide background", result: "Generating 1024x1024 [Flux]..." }
+                },
+                {
+                    id: 6,
+                    title: "The Secure Data Analyst",
+                    module: "Module 2: Private Data",
+                    icon: "📊",
+                    tools: ["Pandas", "Python", "LLM"],
+                    desc: "Analyze sensitive Excel/CSV data. Ask 'What was the trend in Q3?' and get code-backed answers without cloud upload.",
+                    simType: "data",
+                    simData: { query: "Show Q3 Trends", code: "df[df['Quarter']=='Q3']['Revenue'].sum()", result: "$1.2M (Up 15%)" }
+                },
+                {
+                    id: 7,
+                    title: "Capstone: The 'Jarvis' Workflow",
+                    module: "Module 4: Integration",
+                    icon: "🤖",
+                    tools: ["Python GUI", "Integration Script"],
+                    desc: "Glue it all together. A single script that listens for voice, thinks via LLM, and executes tasks automatically.",
+                    simType: "jarvis",
+                    simData: { voice: "Summarize the last report", action: "Processing..." }
+                }
+            ]
+        };
+
+        const app = {
+            view: 'dashboard',
+            currentStep: 0,
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                
+                // Update Nav UI
+                document.querySelectorAll('nav button').forEach(btn => {
+                    btn.classList.remove('text-emerald-400', 'bg-slate-800', 'border', 'border-emerald-500/30', 'shadow-[0_0_10px_rgba(16,185,129,0.3)]');
+                    btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+                });
+                const activeBtn = document.getElementById(`nav-${target}`);
+                activeBtn.classList.remove('text-slate-400', 'hover:text-white');
+                activeBtn.classList.add('text-emerald-400', 'bg-slate-800', 'border', 'border-emerald-500/30', 'shadow-[0_0_10px_rgba(16,185,129,0.3)]');
+
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'roadmap': this.renderRoadmap(wrapper); break;
+                    case 'stack': this.renderStack(wrapper); break;
+                    case 'capstone': this.renderCapstone(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            renderDashboard(container) {
+                container.innerHTML = `
+                    <div class="mb-12 text-center">
+                        <h2 class="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight">Own Your <span class="text-gradient">Intelligence</span></h2>
+                        <p class="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                            A 24-hour intensive workshop on building a secure, private, and automated productivity ecosystem using open-source local AI.
+                            No Cloud. No Subscriptions. No Data Leaks.
+                        </p>
+                    </div>
+                `;
+
+                // Stats Grid
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12";
+                
+                const stats = [
+                    { label: "Duration", val: "24 Hours", icon: "⏱️", color: "text-blue-400" },
+                    { label: "Steps", val: "7 Modules", icon: "👣", color: "text-emerald-400" },
+                    { label: "Cost Model", val: "Open Source", icon: "💸", color: "text-purple-400" },
+                    { label: "Privacy", val: "100% Local", icon: "🛡️", color: "text-orange-400" }
+                ];
+
+                stats.forEach(s => {
+                    grid.innerHTML += `
+                        <div class="bg-slate-800/50 backdrop-blur border border-slate-700 p-6 rounded-xl flex items-center gap-4 hover:border-slate-600 transition-colors">
+                            <span class="text-3xl bg-slate-900 p-3 rounded-lg">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-xl font-bold text-white ${s.color}">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(grid);
+
+                // Split Layout
+                const layout = document.createElement('div');
+                layout.className = "grid grid-cols-1 lg:grid-cols-2 gap-8";
+
+                // Learning Objectives
+                const objCard = document.createElement('div');
+                objCard.className = "bg-slate-800 border border-slate-700 rounded-xl p-8";
+                objCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center">
+                        <span class="mr-3 text-emerald-500">🎯</span> Core Competencies
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="bg-emerald-500/10 text-emerald-400 p-1 rounded mr-3 text-xs mt-1">01</span>
+                            <span class="text-slate-300">Deploy local LLMs (Llama 3, Phi-3) using Ollama & Python.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-emerald-500/10 text-emerald-400 p-1 rounded mr-3 text-xs mt-1">02</span>
+                            <span class="text-slate-300">Build RAG pipelines to chat with private PDFs/Excel files.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-emerald-500/10 text-emerald-400 p-1 rounded mr-3 text-xs mt-1">03</span>
+                            <span class="text-slate-300">Generate assets (Voice/Image) locally for marketing.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-emerald-500/10 text-emerald-400 p-1 rounded mr-3 text-xs mt-1">04</span>
+                            <span class="text-slate-300">Create a voice-controlled "Jarvis" assistant script.</span>
+                        </li>
+                    </ul>
+                `;
+
+                // Methodology Chart
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-slate-800 border border-slate-700 rounded-xl p-8 flex flex-col";
+                chartCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-white mb-2">Methodology</h3>
+                    <p class="text-sm text-slate-400 mb-6">Heavy focus on practical scripting and pipeline construction.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                layout.appendChild(objCard);
+                layout.appendChild(chartCard);
+                container.appendChild(layout);
+
+                setTimeout(() => {
+                    new Chart(document.getElementById('methodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory & Arch.', 'Practical Labs'],
+                            datasets: [{
+                                data: [30, 70],
+                                backgroundColor: ['#334155', '#10b981'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                            }
+                        }
+                    });
+                }, 50);
+            },
+
+            renderRoadmap(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">The 7-Step Roadmap</h2>
+                        <p class="text-slate-400 mt-2">Click through the steps to explore the curriculum and simulate the tools.</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Steps List (Sidebar)
+                const list = document.createElement('div');
+                list.className = "space-y-3 lg:col-span-1 h-fit";
+                
+                courseData.steps.forEach((step, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-4 rounded-lg border transition-all duration-200 flex items-center justify-between group
+                        ${idx === this.currentStep 
+                            ? 'bg-emerald-500/10 border-emerald-500 text-white' 
+                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750 hover:border-slate-600'}`;
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-xs font-bold ${idx === this.currentStep ? 'text-emerald-400' : 'text-slate-500'}">0${step.id}</span>
+                            <span class="font-bold text-sm">${step.title}</span>
+                        </div>
+                        <span class="text-xs opacity-50 group-hover:opacity-100 transition-opacity">→</span>
+                    `;
+                    btn.onclick = () => {
+                        this.currentStep = idx;
+                        this.renderRoadmap(container); // Re-render to update UI
+                    };
+                    list.appendChild(btn);
+                });
+
+                // Detail View
+                const activeStep = courseData.steps[this.currentStep];
+                const detail = document.createElement('div');
+                detail.className = "lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-8 relative overflow-hidden flex flex-col";
+                
+                detail.innerHTML = `
+                    <div class="absolute top-0 right-0 p-6 opacity-5 text-9xl select-none pointer-events-none grayscale">
+                        ${activeStep.icon}
+                    </div>
+                    
+                    <div class="mb-6 z-10">
+                        <span class="inline-block px-3 py-1 rounded-full bg-slate-700 text-emerald-400 text-xs font-bold mb-3 border border-slate-600">
+                            ${activeStep.module}
+                        </span>
+                        <h3 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                            ${activeStep.title} <span class="text-2xl">${activeStep.icon}</span>
+                        </h3>
+                        <p class="text-lg text-slate-300 leading-relaxed border-b border-slate-700 pb-6 mb-6">
+                            ${activeStep.desc}
+                        </p>
+
+                        <div class="mb-8">
+                            <h4 class="text-sm uppercase font-bold text-slate-500 mb-3">The Stack</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${activeStep.tools.map(t => `<span class="bg-slate-900 text-blue-400 px-3 py-1 rounded border border-slate-700 text-sm font-mono">${t}</span>`).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Interactive Simulator Area -->
+                        <div class="bg-slate-950 rounded-lg border border-slate-800 p-4 font-mono text-sm relative overflow-hidden group">
+                            <div class="absolute top-2 right-2 flex gap-1">
+                                <div class="w-3 h-3 rounded-full bg-red-500/20"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500/20"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500/20"></div>
+                            </div>
+                            <div class="mb-2 text-slate-500 text-xs uppercase tracking-wider">Interactive Terminal</div>
+                            
+                            <div id="sim-output" class="min-h-[100px] text-slate-300 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-emerald-500">➜</span>
+                                    <span class="text-blue-400">~/workspace</span>
+                                    <span class="typing-text border-r-2 border-slate-500 pr-1">Ready...</span>
+                                </div>
+                            </div>
+
+                            <button onclick="app.runSimulation(${this.currentStep})" class="mt-4 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors w-full sm:w-auto">
+                                Run ${activeStep.simType.toUpperCase()} Simulation
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                wrapper.appendChild(list);
+                wrapper.appendChild(detail);
+                container.appendChild(wrapper);
+            },
+
+            runSimulation(stepIdx) {
+                const step = courseData.steps[stepIdx];
+                const out = document.getElementById('sim-output');
+                out.innerHTML = `
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-emerald-500">➜</span>
+                        <span class="text-blue-400">~/workspace</span>
+                        <span class="text-white">Initializing ${step.tools[0]}...</span>
+                    </div>
+                `;
+
+                // Fake processing delay
+                setTimeout(() => {
+                    let resultHTML = '';
+                    if (step.simType === 'terminal') {
+                        resultHTML = `<div class="text-slate-400 whitespace-pre-wrap">${step.simData.output}</div>`;
+                    } else if (step.simType === 'scribe') {
+                        resultHTML = `
+                            <div class="bg-slate-900 p-2 rounded border-l-2 border-blue-500 text-xs">
+                                <div class="text-slate-500 mb-1">Audio Transcribing...</div>
+                                <div class="text-white">"${step.simData.result}"</div>
+                            </div>`;
+                    } else if (step.simType === 'rag') {
+                        resultHTML = `
+                            <div class="text-slate-400">Searching vector db... <span class="text-emerald-400">Found in ${step.simData.source}</span></div>
+                            <div class="mt-2 text-white bg-slate-800 p-2 rounded">AI: ${step.simData.answer}</div>
+                        `;
+                    } else if (step.simType === 'data') {
+                        resultHTML = `
+                            <div class="text-blue-400">Running Pandas: <code>${step.simData.code}</code></div>
+                            <div class="text-emerald-400 mt-1 font-bold">Result: ${step.simData.result}</div>
+                        `;
+                    } else if (step.simType === 'image') {
+                        resultHTML = `
+                            <div class="text-slate-400">Generating image with Flux [schnell]...</div>
+                            <div class="mt-2 h-24 bg-gradient-to-r from-purple-900 to-blue-900 rounded flex items-center justify-center text-white/50 border border-white/10">
+                                [Generated Image 1024x1024]
+                            </div>
+                        `;
+                    } else {
+                        resultHTML = `<div class="text-emerald-400">Task Completed Successfully.</div>`;
+                    }
+
+                    out.innerHTML += `<div class="fade-in">${resultHTML}</div>`;
+                    out.innerHTML += `<div class="mt-2"><span class="text-emerald-500">➜</span> <span class="cursor-blink"></span></div>`;
+                }, 600);
+            },
+
+            renderStack(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">The Offline Stack</h2>
+                        <p class="text-slate-400 mt-2">A breakdown of the open-source tools mastered in this course.</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6";
+
+                const tools = [
+                    { name: "Ollama", cat: "Inference Engine", desc: "Run Llama 3, Phi-3, and Mistral locally with zero setup.", color: "border-white" },
+                    { name: "Faster-Whisper", cat: "Audio/Speech", desc: "Ultra-fast speech-to-text model for transcription.", color: "border-blue-500" },
+                    { name: "Llama 3.2", cat: "LLM", desc: "Meta's open-weights model optimized for reasoning and code.", color: "border-blue-400" },
+                    { name: "Phi-3.5", cat: "LLM", desc: "Microsoft's lightweight model perfect for RAG on laptops.", color: "border-blue-300" },
+                    { name: "Kokoro", cat: "TTS", desc: "High-quality text-to-speech engine for voice generation.", color: "border-purple-500" },
+                    { name: "Flux [schnell]", cat: "Image Gen", desc: "State-of-the-art image generation model for rapid assets.", color: "border-pink-500" },
+                    { name: "Pandas", cat: "Data Analysis", desc: "Python library for robust data manipulation and analysis.", color: "border-yellow-500" },
+                    { name: "GGUF", cat: "Format", desc: "Binary format for quantized models enabling CPU inference.", color: "border-slate-500" },
+                    { name: "Python 3.10+", cat: "Language", desc: "The glue code language used to script the Jarvis workflow.", color: "border-green-500" }
+                ];
+
+                tools.forEach(t => {
+                    grid.innerHTML += `
+                        <div class="bg-slate-800 p-6 rounded-xl border-t-4 ${t.color} shadow-lg hover:-translate-y-1 transition-transform">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-bold text-lg text-white">${t.name}</h3>
+                                <span class="text-[10px] uppercase font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded">${t.cat}</span>
+                            </div>
+                            <p class="text-sm text-slate-400 leading-relaxed">${t.desc}</p>
+                        </div>
+                    `;
+                });
+
+                container.appendChild(grid);
+            },
+
+            renderCapstone(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Capstone: The "Jarvis" Workflow</h2>
+                        <p class="text-slate-400 mt-2">
+                            Step 7 integrates all modules. Use the simulator below to test the final "Voice-to-Action" script.
+                        </p>
+                    </div>
+                `;
+
+                const terminal = document.createElement('div');
+                terminal.className = "max-w-3xl mx-auto bg-slate-950 rounded-lg shadow-2xl border border-slate-800 overflow-hidden font-mono text-sm";
+                
+                terminal.innerHTML = `
+                    <div class="bg-slate-900 px-4 py-2 flex items-center justify-between border-b border-slate-800">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="text-slate-500 text-xs">jarvis_main.py</div>
+                        <div></div>
+                    </div>
+                    
+                    <div id="jarvis-screen" class="p-6 min-h-[300px] text-slate-300 space-y-4">
+                        <div class="text-emerald-500">System Online. Local Inference Engine Active.</div>
+                        <div>Waiting for wake word...</div>
+                    </div>
+
+                    <div class="bg-slate-900 p-4 border-t border-slate-800 flex gap-3">
+                        <button onclick="app.runJarvis('summary')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold transition-colors">
+                            🎤 CMD: "Summarize Contract"
+                        </button>
+                        <button onclick="app.runJarvis('image')" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 rounded text-xs font-bold transition-colors">
+                            🎤 CMD: "Generate Icon"
+                        </button>
+                        <button onclick="app.runJarvis('data')" class="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-2 rounded text-xs font-bold transition-colors">
+                            🎤 CMD: "Analyze Finance"
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(terminal);
+            },
+
+            runJarvis(type) {
+                const screen = document.getElementById('jarvis-screen');
+                screen.innerHTML += `<div class="mt-4 border-t border-slate-800 pt-2"></div>`;
+                
+                let steps = [];
+                
+                if (type === 'summary') {
+                    steps = [
+                        { msg: "🎤 Hearing: 'Summarize the latest contract PDF'", color: "text-white" },
+                        { msg: "⚙️ Whisper: Transcribed audio to text (0.4s)", color: "text-blue-400" },
+                        { msg: "🔍 RAG: Retrieving context from 'contract_vFinal.pdf'...", color: "text-yellow-400" },
+                        { msg: "🤖 Llama 3: Generating summary...", color: "text-purple-400" },
+                        { msg: "✅ DONE: 'The contract is valid until 2026. Key clause: 30-day termination notice.'", color: "text-emerald-400 font-bold" }
+                    ];
+                } else if (type === 'image') {
+                    steps = [
+                        { msg: "🎤 Hearing: 'Generate a neon city icon'", color: "text-white" },
+                        { msg: "⚙️ Whisper: Transcribed audio to text (0.3s)", color: "text-blue-400" },
+                        { msg: "🎨 Flux: Generating 512x512 asset...", color: "text-pink-400" },
+                        { msg: "💾 Saving to /assets/icon_001.png", color: "text-slate-400" },
+                        { msg: "✅ DONE: Image generated in 1.8s.", color: "text-emerald-400 font-bold" }
+                    ];
+                } else {
+                    steps = [
+                        { msg: "🎤 Hearing: 'What is the Q3 Revenue?'", color: "text-white" },
+                        { msg: "⚙️ Whisper: Transcribed audio to text (0.5s)", color: "text-blue-400" },
+                        { msg: "🐍 Pandas: Executing <code>data.groupby('Q').sum()</code>...", color: "text-orange-400" },
+                        { msg: "✅ DONE: 'Q3 Revenue was $450,000.'", color: "text-emerald-400 font-bold" }
+                    ];
+                }
+
+                let delay = 0;
+                steps.forEach(step => {
+                    setTimeout(() => {
+                        screen.innerHTML += `<div class="${step.color} fade-in">> ${step.msg}</div>`;
+                        screen.scrollTop = screen.scrollHeight;
+                    }, delay);
+                    delay += 800;
+                });
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
+
+
+

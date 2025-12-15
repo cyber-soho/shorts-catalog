@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Access Control: MAC, DAC, and Hardening</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar for Dark Mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Terminal Cursor */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #3b82f6;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+    <!-- Chosen Palette: "Secure Slate"
+         Background: Slate-900 (Dark Mode Base)
+         Primary: Blue-500 (Focus/Action)
+         Secondary: Indigo-500 (Deep technical)
+         Accent: Emerald-500 (Success/Secure)
+         Text: Slate-300 (Readable contrast)
+    -->
+    
+    <!-- Application Structure Plan:
+         1. Dashboard (The Perimeter): High-level stats, audience breakdown, and learning model charts.
+         2. Access Models (The Core): Interactive comparison between DAC and MAC. Users toggle switches to see how permissions affect access in real-time simulations.
+         3. Curriculum Map (The Path): Timeline view of the 3 modules with expandable details.
+         4. Hardening Lab (The Bunker): A checklist-style interactive section where users "harden" a server by toggling settings and seeing the security score increase.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology Chart: Doughnut chart for the 30/70 split.
+         - Access Logic: Visual diagrams using CSS grid/flex to show User -> Object relationships in DAC vs MAC.
+         - Hardening Meter: A dynamic progress bar that fills as users apply security controls.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-900 text-slate-300 font-sans antialiased selection:bg-blue-900 selection:text-white">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔒</span>
+                    <div>
+                        <h1 class="font-bold text-xl text-white tracking-tight">Access<span class="text-blue-500">Control</span>.Edu</h1>
+                        <p class="text-[10px] text-slate-500 font-mono hidden sm:block">ADVANCED HARDENING COURSE</p>
+                    </div>
+                </div>
+                <div class="flex space-x-1 sm:space-x-4 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-600 border border-blue-500 transition-colors whitespace-nowrap shadow-md">Dashboard</button>
+                    <button onclick="app.navigate('models')" id="nav-models" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">DAC vs MAC</button>
+                    <button onclick="app.navigate('curriculum')" id="nav-curriculum" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">Curriculum</button>
+                    <button onclick="app.navigate('lab')" id="nav-lab" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">Hardening Lab</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-500 py-8 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium text-slate-400">Advanced Access Control: MAC, DAC, and Hardening</p>
+            <p class="text-xs mt-2 opacity-60">24 Hours • Non-Credited • Emplois-Québec Approved</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "Advanced Access Control: MAC, DAC, and Hardening",
+                duration: "24 Hours",
+                audience: ["SysAdmins", "Security Engineers", "IT Professionals"],
+                methodology: { theory: 30, lab: 70 }
+            },
+            modules: [
+                {
+                    id: 1,
+                    title: "Discretionary Access Control (DAC)",
+                    hours: 8,
+                    icon: "👤",
+                    desc: "Mastering user-driven permissions on Linux (ACLs) and Windows (NTFS/AD).",
+                    topics: ["Linux Permissions (UGO, SUID)", "Access Control Lists (ACLs)", "Windows NTFS Inheritance", "GPO Automation"]
+                },
+                {
+                    id: 2,
+                    title: "Mandatory Access Control (MAC)",
+                    hours: 8,
+                    icon: "🛡️",
+                    desc: "Implementing system-enforced policies where 'Everything is forbidden unless allowed'.",
+                    topics: ["AppArmor Profiles", "SELinux Contexts & Booleans", "Enforce vs Complain Mode", "Audit Analysis"]
+                },
+                {
+                    id: 3,
+                    title: "Endpoint Hardening & Securing",
+                    hours: 8,
+                    icon: "🏰",
+                    desc: "Reducing the attack surface through industry benchmarks and rigorous configuration.",
+                    topics: ["Principle of Least Privilege", "SSH & Kernel Hardening", "BitLocker Encryption", "AppLocker Whitelisting"]
+                }
+            ],
+            hardeningTasks: [
+                { id: 'ssh', label: 'Disable SSH Root Login', score: 20, type: 'Linux' },
+                { id: 'bitlocker', label: 'Enable BitLocker', score: 25, type: 'Windows' },
+                { id: 'suid', label: 'Remove Unnecessary SUIDs', score: 15, type: 'Linux' },
+                { id: 'apparmor', label: 'Enforce AppArmor Profiles', score: 30, type: 'Linux' },
+                { id: 'gpo', label: 'Apply Security Baseline GPO', score: 10, type: 'Windows' }
+            ]
+        };
+
+        const app = {
+            view: 'dashboard',
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'models': this.renderModels(wrapper); break;
+                    case 'curriculum': this.renderCurriculum(wrapper); break;
+                    case 'lab': this.renderLab(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'models', 'curriculum', 'lab'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-600 border border-blue-500 transition-colors whitespace-nowrap shadow-md";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                container.innerHTML = `
+                    <div class="mb-10 text-center">
+                        <h2 class="text-4xl font-extrabold text-white mb-4 tracking-tight">Secure the <span class="text-blue-500">Core</span></h2>
+                        <p class="text-lg text-slate-400 max-w-3xl mx-auto">
+                            A deep dive into security models and system hardening. Move from basic permissions to enterprise-grade Mandatory Access Control.
+                        </p>
+                    </div>
+                `;
+
+                // Stats Grid
+                const statsGrid = document.createElement('div');
+                statsGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10";
+                
+                const stats = [
+                    { label: "Total Duration", val: "24 Hours", icon: "⏱️", color: "text-blue-400" },
+                    { label: "Modules", val: "3 Units", icon: "📦", color: "text-indigo-400" },
+                    { label: "Labs", val: "70% Hands-on", icon: "⌨️", color: "text-emerald-400" },
+                    { label: "OS Focus", val: "Linux & Win", icon: "🖥️", color: "text-slate-200" }
+                ];
+
+                stats.forEach(s => {
+                    statsGrid.innerHTML += `
+                        <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl flex items-center gap-4 hover:border-blue-500/50 transition-colors">
+                            <span class="text-3xl bg-slate-900 p-3 rounded-lg">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-2xl font-bold ${s.color}">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(statsGrid);
+
+                // Content Split
+                const layout = document.createElement('div');
+                layout.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Audience
+                const infoCard = document.createElement('div');
+                infoCard.className = "lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-8";
+                infoCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center">
+                        <span class="bg-blue-500/10 text-blue-400 p-1 rounded mr-3 text-sm">🎯</span> Key Competencies
+                    </h3>
+                    <div class="space-y-4">
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <li class="flex items-start bg-slate-950 p-3 rounded border border-slate-800">
+                                <span class="text-blue-500 mr-2">✓</span> Configure granular DAC (ACLs/NTFS).
+                            </li>
+                            <li class="flex items-start bg-slate-950 p-3 rounded border border-slate-800">
+                                <span class="text-blue-500 mr-2">✓</span> Deploy AppArmor & SELinux Policies.
+                            </li>
+                            <li class="flex items-start bg-slate-950 p-3 rounded border border-slate-800">
+                                <span class="text-blue-500 mr-2">✓</span> Automate Security via GPO.
+                            </li>
+                            <li class="flex items-start bg-slate-950 p-3 rounded border border-slate-800">
+                                <span class="text-blue-500 mr-2">✓</span> Audit & Harden Endpoints (CIS/STIG).
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-slate-800">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Target Audience</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${courseData.meta.audience.map(a => `<span class="bg-slate-800 text-slate-400 px-2 py-1 rounded text-xs border border-slate-700">${a}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Chart
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-slate-900 border border-slate-800 rounded-xl p-8 flex flex-col";
+                chartCard.innerHTML = `
+                    <h3 class="text-lg font-bold text-white mb-2">Methodology</h3>
+                    <p class="text-sm text-slate-500 mb-4">Policy logic vs. Implementation.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                layout.appendChild(infoCard);
+                layout.appendChild(chartCard);
+                container.appendChild(layout);
+
+                // Render Chart
+                setTimeout(() => {
+                    new Chart(document.getElementById('methodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory', 'Practical Labs'],
+                            datasets: [{
+                                data: [30, 70],
+                                backgroundColor: ['#334155', '#3b82f6'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderModels(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Security Models Interactive</h2>
+                        <p class="text-slate-400 mt-2">Compare Discretionary (DAC) vs Mandatory (MAC) Access Control logic.</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "grid grid-cols-1 lg:grid-cols-2 gap-8";
+
+                // DAC Simulation
+                const dacCard = document.createElement('div');
+                dacCard.className = "bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden group hover:border-indigo-500 transition-colors";
+                dacCard.innerHTML = `
+                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">DAC</div>
+                    <h3 class="text-xl font-bold text-white mb-4">The User Decides</h3>
+                    <p class="text-sm text-slate-400 mb-6">In DAC, the owner of the object sets permissions. If User A owns a file, they can grant access to User B, even if the admin didn't intend it.</p>
+                    
+                    <div class="bg-slate-950 p-4 rounded border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Owner (Alice) Permission:</span>
+                            <select id="dac-perm" onchange="app.updateDAC()" class="bg-slate-800 border border-slate-700 rounded text-xs p-1">
+                                <option value="rw">Read/Write</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Malware (Run by Alice):</span>
+                            <span id="dac-result" class="text-emerald-400 font-mono text-xs">Can Access</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 italic">Risk: Malware runs with Alice's full discretionary rights.</p>
+                `;
+
+                // MAC Simulation
+                const macCard = document.createElement('div');
+                macCard.className = "bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden group hover:border-emerald-500 transition-colors";
+                macCard.innerHTML = `
+                    <div class="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">MAC</div>
+                    <h3 class="text-xl font-bold text-white mb-4">The System Decides</h3>
+                    <p class="text-sm text-slate-400 mb-6">In MAC (SELinux/AppArmor), policies enforce rules. Even if root runs a process, if the policy says "No Network", it cannot connect.</p>
+                    
+                    <div class="bg-slate-950 p-4 rounded border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Process Context:</span>
+                            <span class="text-xs font-mono text-blue-400">httpd_t</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">File Context:</span>
+                            <span class="text-xs font-mono text-indigo-400">shadow_t</span>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-slate-800 pt-2">
+                            <span class="text-sm">Policy Check:</span>
+                            <span class="text-red-500 font-bold text-xs">DENIED (AVC Denial)</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 italic">Benefit: Even if hacked, the web server cannot read password files.</p>
+                `;
+
+                wrapper.appendChild(dacCard);
+                wrapper.appendChild(macCard);
+                container.appendChild(wrapper);
+            },
+
+            updateDAC() {
+                const val = document.getElementById('dac-perm').value;
+                const res = document.getElementById('dac-result');
+                if(val === 'rw') {
+                    res.innerText = "Can Access";
+                    res.className = "text-emerald-400 font-mono text-xs";
+                } else {
+                    res.innerText = "Access Denied";
+                    res.className = "text-red-400 font-mono text-xs";
+                }
+            },
+
+            renderCurriculum(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Course Curriculum</h2>
+                        <p class="text-slate-400 mt-2">24 Hours distributed evenly across three critical security domains.</p>
+                    </div>
+                `;
+
+                const list = document.createElement('div');
+                list.className = "space-y-4 max-w-4xl mx-auto";
+
+                courseData.modules.forEach(mod => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-600 transition-all cursor-pointer group";
+                    
+                    card.onclick = (e) => {
+                        const content = card.querySelector('.mod-content');
+                        content.classList.toggle('hidden');
+                        card.classList.toggle('border-blue-500');
+                    };
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl bg-slate-800 p-3 rounded-lg">${mod.icon}</span>
+                                <div>
+                                    <h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">${mod.title}</h3>
+                                    <span class="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded border border-slate-800 mr-2">${mod.hours} HOURS</span>
+                                </div>
+                            </div>
+                            <div class="text-slate-500 group-hover:text-white">▼</div>
+                        </div>
+                        <div class="mod-content hidden mt-6 border-t border-slate-800 pt-4">
+                            <p class="text-sm text-slate-300 mb-4 italic">"${mod.desc}"</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                ${mod.topics.map(t => `<div class="flex items-center text-sm text-slate-400"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>${t}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+
+                container.appendChild(list);
+            },
+
+            renderLab(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Hardening Lab Simulator</h2>
+                        <p class="text-slate-400 mt-2">Apply security controls to increase the system security score.</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "bg-slate-950 border border-slate-800 rounded-xl p-8 max-w-4xl mx-auto shadow-2xl";
+
+                // Score Bar
+                const scoreSection = document.createElement('div');
+                scoreSection.className = "mb-8";
+                scoreSection.innerHTML = `
+                    <div class="flex justify-between text-sm font-bold text-slate-300 mb-2">
+                        <span>System Security Score</span>
+                        <span id="score-val">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-4 overflow-hidden border border-slate-800">
+                        <div id="score-bar" class="bg-red-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div id="score-msg" class="text-center text-xs text-slate-500 mt-2">System Vulnerable</div>
+                `;
+                wrapper.appendChild(scoreSection);
+
+                // Tasks
+                const taskList = document.createElement('div');
+                taskList.className = "space-y-3";
+                
+                courseData.hardeningTasks.forEach(task => {
+                    const item = document.createElement('div');
+                    item.className = "flex items-center justify-between bg-slate-900 p-4 rounded border border-slate-800 hover:border-slate-700 transition-colors";
+                    
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="${task.id}" class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900" onchange="app.updateScore()">
+                            <div>
+                                <div class="text-sm font-medium text-white">${task.label}</div>
+                                <div class="text-xs text-slate-500">${task.type} • +${task.score} pts</div>
+                            </div>
+                        </div>
+                    `;
+                    taskList.appendChild(item);
+                });
+                wrapper.appendChild(taskList);
+
+                container.appendChild(wrapper);
+            },
+
+            updateScore() {
+                let score = 0;
+                courseData.hardeningTasks.forEach(task => {
+                    if(document.getElementById(task.id).checked) {
+                        score += task.score;
+                    }
+                });
+
+                const bar = document.getElementById('score-bar');
+                const val = document.getElementById('score-val');
+                const msg = document.getElementById('score-msg');
+
+                bar.style.width = score + '%';
+                val.innerText = score + '%';
+
+                if(score < 40) {
+                    bar.className = "bg-red-500 h-4 rounded-full transition-all duration-500";
+                    msg.innerText = "System Vulnerable";
+                    msg.className = "text-center text-xs text-red-500 mt-2";
+                } else if (score < 80) {
+                    bar.className = "bg-yellow-500 h-4 rounded-full transition-all duration-500";
+                    msg.innerText = "Hardening In Progress";
+                    msg.className = "text-center text-xs text-yellow-500 mt-2";
+                } else {
+                    bar.className = "bg-emerald-500 h-4 rounded-full transition-all duration-500";
+                    msg.innerText = "System Secured";
+                    msg.className = "text-center text-xs text-emerald-500 mt-2";
+                }
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>

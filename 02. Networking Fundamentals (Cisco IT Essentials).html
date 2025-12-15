@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Networking Fundamentals - Interactive Course Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* OSI Model Layer Styling */
+        .osi-layer {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .osi-layer:hover {
+            transform: translateX(10px);
+            box-shadow: -4px 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Terminal Typing Cursor */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #22c55e;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Animation utilities */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Slate (Background), Blue (Primary), Emerald (Success/Terminal), Amber (Warning) -->
+    <!-- Application Structure Plan: 
+         The app is designed as a "Student Learning Portal".
+         1. Dashboard: High-level overview of the course logistics, objectives, and methodology breakdown.
+         2. Curriculum Map: An interactive accordion/card system to explore the 4 Modules in detail.
+         3. Concept Visualizer: A dedicated section for the abstract concepts (OSI Model & Protocol Suite) to make them tangible.
+         4. Lab Simulator: A mock terminal to gamify the "Operations & Diagnostics" module tools.
+         This structure moves from "What is the course?" to "What will I learn?" to "How does it work?" to "Let me try it".
+    -->
+    <!-- Visualization & Content Choices:
+         1. Methodology Chart (Doughnut): Instantly communicates the 40/60 theory-lab split, crucial for the "Intensive Workshop" format.
+         2. OSI Stack (Interactive HTML): Replaces boring lists with a clickable stack, reinforcing the "Layered" nature of the model.
+         3. Terminal (JS Simulation): Instead of describing 'ping', the user 'types' it. Increases engagement for Module 4.
+         4. Layout: Grid/Flexbox used for responsiveness. No SVG graphics used as requested; visuals are built with CSS shapes and Unicode.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🌐</span>
+                    <h1 class="font-bold text-xl text-slate-700 tracking-tight">NetFundamentals <span class="text-slate-400 font-normal text-sm hidden sm:inline">| IT Essentials</span></h1>
+                </div>
+                <div class="flex space-x-2 sm:space-x-4 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors whitespace-nowrap">Dashboard</button>
+                    <button onclick="app.navigate('curriculum')" id="nav-curriculum" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Modules</button>
+                    <button onclick="app.navigate('concepts')" id="nav-concepts" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">OSI & Protocols</button>
+                    <button onclick="app.navigate('labs')" id="nav-labs" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Lab Sim</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Dynamic Content Rendered Here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium text-slate-300">Networking Fundamentals (IT Essentials)</p>
+            <p class="text-xs mt-2">24 Hours • Non-Credited • Emplois-Québec Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // --- DATA STORE ---
+        const courseData = {
+            meta: {
+                title: "Networking Fundamentals",
+                duration: "24 Hours",
+                type: "Non-Credited Workshop",
+                audience: ["Help Desk Technicians", "Junior IT Support", "Career Changers", "Network+ Students"],
+                methodology: { theory: 40, lab: 60 }
+            },
+            objectives: [
+                "Explain the purpose and function of the OSI and TCP/IP models.",
+                "Identify and describe common network components and cabling.",
+                "Configure basic IPv4 addressing and understand IPv6 concepts.",
+                "Distinguish between LAN, WAN, and Wireless network architectures.",
+                "Utilize command-line tools to troubleshoot network connectivity."
+            ],
+            modules: [
+                {
+                    id: 1,
+                    title: "Foundations & Architecture",
+                    hours: 6,
+                    icon: "🏗️",
+                    desc: "Core concepts of data transmission, network types, and physical components.",
+                    topics: [
+                        { title: "Foundations", items: ["Data transmission: Bandwidth & Throughput", "Architectures: Client-Server vs P2P"] },
+                        { title: "Layered Models", items: ["OSI Reference Model (7 Layers)", "TCP/IP Protocol Suite"] },
+                        { title: "Core Components", items: ["Intermediary: Routers, Switches, Firewalls", "Media: UTP/STP, Fiber, Wi-Fi"] }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Addressing & Protocols",
+                    hours: 6,
+                    icon: "🏷️",
+                    desc: "The language of networks: Logical/Physical addressing and communication rules.",
+                    topics: [
+                        { title: "Addressing", items: ["Layer 2: MAC Addresses (Hex)", "Layer 3: IPv4, Subnets, Gateways", "IPv6 Introduction"] },
+                        { title: "Transport Protocols", items: ["TCP (Reliable, Connection-oriented)", "UDP (Fast, Connectionless)"] },
+                        { title: "App Services", items: ["DHCP (Auto IP)", "DNS (Naming)", "HTTP/S (Web)", "Email Protocols"] }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Connectivity & Infrastructure",
+                    hours: 6,
+                    icon: "🔌",
+                    desc: "Building the network: Topologies, routing logic, and wide area connections.",
+                    topics: [
+                        { title: "LAN & WAN", items: ["Topologies & Ethernet", "VLAN Concepts", "ISP Tech & VPNs"] },
+                        { title: "Routing Logic", items: ["Static Routes", "Dynamic Protocols (OSPF/EIGRP)", "NAT (Public vs Private IP)"] },
+                        { title: "Switching", items: ["MAC Address Tables", "Frame Forwarding"] }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Operations & Diagnostics",
+                    hours: 6,
+                    icon: "🩺",
+                    desc: "Keeping it running: Systematic troubleshooting and essential diagnostic tools.",
+                    topics: [
+                        { title: "CLI Tools", items: ["ping (Connectivity)", "tracert (Path)", "ipconfig (Config)", "nslookup (DNS)"] },
+                        { title: "Hardware Tools", items: ["Cable Testers", "Tone Generators", "Loopback Plugs"] },
+                        { title: "Methodology", items: ["Identify -> Theory -> Test -> Plan -> Verify -> Document"] }
+                    ]
+                }
+            ],
+            osiLayers: [
+                { num: 7, name: "Application", desc: "Network process to application", protocols: "HTTP, DNS, SMTP" },
+                { num: 6, name: "Presentation", desc: "Data representation & encryption", protocols: "SSL/TLS, JPEG" },
+                { num: 5, name: "Session", desc: "Interhost communication", protocols: "NetBIOS, RPC" },
+                { num: 4, name: "Transport", desc: "End-to-end connections", protocols: "TCP, UDP" },
+                { num: 3, name: "Network", desc: "Path determination & IP (Routing)", protocols: "IP, ICMP, OSPF" },
+                { num: 2, name: "Data Link", desc: "Physical addressing (MAC) & Switching", protocols: "Ethernet, 802.11" },
+                { num: 1, name: "Physical", desc: "Media, signal, and binary transmission", protocols: "Bits, Volts" }
+            ],
+            commands: {
+                'ping': { output: 'Pinging 192.168.1.1 with 32 bytes of data:\nReply from 192.168.1.1: bytes=32 time<1ms TTL=64\nReply from 192.168.1.1: bytes=32 time<1ms TTL=64\n\nPing statistics: Sent = 2, Received = 2, Lost = 0 (0% loss)', desc: 'Verifies IP-level connectivity to another TCP/IP computer.' },
+                'ipconfig': { output: 'Ethernet adapter Ethernet0:\n   Connection-specific DNS Suffix  . : localdomain\n   IPv4 Address. . . . . . . . . . . : 192.168.1.105\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.1.1', desc: 'Displays all current TCP/IP network configuration values.' },
+                'tracert': { output: 'Tracing route to google.com [142.250.190.46]\nover a maximum of 30 hops:\n  1    <1 ms    <1 ms    <1 ms  192.168.1.1\n  2    10 ms    12 ms    11 ms  10.200.0.1\n  3    14 ms    15 ms    14 ms  edge-router.isp.net', desc: 'Determines the path taken to a destination by sending ICMP Echo Request messages.' },
+                'nslookup': { output: 'Server:  google-public-dns-a.google.com\nAddress:  8.8.8.8\n\nNon-authoritative answer:\nName:    openai.com\nAddress:  104.18.7.192', desc: 'Queries the Domain Name System (DNS) to obtain domain name or IP address mapping.' }
+            }
+        };
+
+        // --- APP CONTROLLER ---
+        const app = {
+            currentState: 'dashboard',
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(view) {
+                this.currentState = view;
+                this.updateNavHighlight();
+                const container = document.getElementById('app-root');
+                container.innerHTML = ''; // Clear content
+                
+                // Animation wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+                
+                switch(view) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'curriculum': this.renderCurriculum(wrapper); break;
+                    case 'concepts': this.renderConcepts(wrapper); break;
+                    case 'labs': this.renderLabs(wrapper); break;
+                }
+                
+                container.appendChild(wrapper);
+            },
+
+            updateNavHighlight() {
+                const navIds = ['dashboard', 'curriculum', 'concepts', 'labs'];
+                navIds.forEach(id => {
+                    const btn = document.getElementById(`nav-${id}`);
+                    if (id === this.currentState) {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors whitespace-nowrap shadow-sm border border-blue-100";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            // --- RENDERERS ---
+
+            renderDashboard(container) {
+                // Header
+                container.innerHTML = `
+                    <div class="mb-8 text-center sm:text-left">
+                        <h2 class="text-3xl font-extrabold text-slate-900">Course Overview</h2>
+                        <p class="text-lg text-slate-600 mt-2 max-w-3xl">
+                            A comprehensive 24-hour workshop covering the architecture, structure, functions, and diagnostics of modern networks. 
+                            Based on Cisco Networking Academy IT Essentials.
+                        </p>
+                    </div>
+                `;
+
+                // Stats Row
+                const statsGrid = document.createElement('div');
+                statsGrid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8';
+                
+                const stats = [
+                    { label: 'Duration', val: courseData.meta.duration, icon: '⏱️' },
+                    { label: 'Modules', val: '4 (6h each)', icon: '📚' },
+                    { label: 'Focus', val: 'Practical Skills', icon: '🛠️' },
+                    { label: 'Format', val: 'Non-Credited', icon: '🎓' }
+                ];
+
+                stats.forEach(stat => {
+                    statsGrid.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center">
+                            <span class="text-2xl mr-4 bg-slate-50 p-2 rounded-lg">${stat.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${stat.label}</p>
+                                <p class="text-slate-800 font-bold">${stat.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(statsGrid);
+
+                // Main Content Grid
+                const contentGrid = document.createElement('div');
+                contentGrid.className = 'grid grid-cols-1 lg:grid-cols-3 gap-8';
+
+                // Learning Objectives
+                const objCard = document.createElement('div');
+                objCard.className = 'lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6';
+                objCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center">
+                        <span class="text-blue-500 mr-2">🎯</span> Competencies & Objectives
+                    </h3>
+                    <ul class="space-y-3">
+                        ${courseData.objectives.map((obj, i) => `
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">${i+1}</span>
+                                <span class="text-slate-700 leading-relaxed">${obj}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase mb-3">Target Audience</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${courseData.meta.audience.map(aud => `
+                                <span class="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full font-medium border border-slate-200">${aud}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Methodology Chart
+                const methodCard = document.createElement('div');
+                methodCard.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col';
+                methodCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">Teaching Methodology</h3>
+                    <p class="text-sm text-slate-500 mb-4">Balance of instruction and hands-on practice.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p class="text-xs text-slate-400">Includes Packet Tracer simulations & physical equipment labs.</p>
+                    </div>
+                `;
+
+                contentGrid.appendChild(objCard);
+                contentGrid.appendChild(methodCard);
+                container.appendChild(contentGrid);
+
+                // Render Chart
+                setTimeout(() => {
+                    const ctx = document.getElementById('methodChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory (Lectures)', 'Practical Labs'],
+                            datasets: [{
+                                data: [40, 60],
+                                backgroundColor: ['#94a3b8', '#3b82f6'],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderCurriculum(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-extrabold text-slate-900">Curriculum Map</h2>
+                        <p class="text-lg text-slate-600 mt-2">Explore the 4 core modules. Click to expand detailed topics.</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = 'space-y-6';
+
+                courseData.modules.forEach(mod => {
+                    const modCard = document.createElement('div');
+                    modCard.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group';
+                    
+                    modCard.innerHTML = `
+                        <div class="p-6 cursor-pointer hover:bg-slate-50 transition-colors" onclick="this.nextElementSibling.classList.toggle('hidden'); this.nextElementSibling.classList.toggle('block');">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-lg bg-blue-50 text-2xl flex items-center justify-center text-blue-600 shadow-sm">
+                                        ${mod.icon}
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-xl text-slate-800">Module ${mod.id}: ${mod.title}</h3>
+                                        <p class="text-sm text-slate-500 hidden sm:block">${mod.desc}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full mb-1">${mod.hours} HRS</span>
+                                    <div class="text-slate-400 text-sm">▼</div>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-500 sm:hidden mt-3">${mod.desc}</p>
+                        </div>
+                        <div class="hidden border-t border-slate-100 bg-slate-50/50 p-6 animate-slideDown">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                ${mod.topics.map(topic => `
+                                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                        <h4 class="font-bold text-blue-700 mb-2 text-sm uppercase tracking-wide border-b border-blue-50 pb-2">${topic.title}</h4>
+                                        <ul class="space-y-2">
+                                            ${topic.items.map(item => `
+                                                <li class="text-sm text-slate-700 flex items-start">
+                                                    <span class="text-blue-400 mr-2">•</span>${item}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(modCard);
+                });
+
+                container.appendChild(grid);
+            },
+
+            renderConcepts(container) {
+                // Intro
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-extrabold text-slate-900">Interactive OSI Model</h2>
+                        <p class="text-lg text-slate-600 mt-2">
+                            A deep dive into the 7-layer OSI Reference Model (Module 1). 
+                            Hover over a layer to understand its role in the network stack.
+                        </p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex flex-col lg:flex-row gap-8 items-start';
+
+                // The Stack Visual
+                const stack = document.createElement('div');
+                stack.className = 'w-full lg:w-1/3 space-y-2';
+                
+                courseData.osiLayers.forEach(layer => {
+                    const layerDiv = document.createElement('div');
+                    layerDiv.className = `osi-layer p-4 rounded-lg font-bold text-white flex justify-between items-center shadow-md
+                        ${layer.num > 4 ? 'bg-indigo-500' : (layer.num > 2 ? 'bg-blue-500' : 'bg-cyan-600')}`;
+                    layerDiv.innerHTML = `
+                        <span>Layer ${layer.num}</span>
+                        <span>${layer.name}</span>
+                    `;
+                    
+                    // Hover Event
+                    layerDiv.onmouseenter = () => {
+                        document.getElementById('osi-title').innerText = `${layer.name} Layer (L${layer.num})`;
+                        document.getElementById('osi-desc').innerText = layer.desc;
+                        document.getElementById('osi-proto').innerHTML = layer.protocols.split(',').map(p => 
+                            `<span class="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-mono border border-slate-300 mr-1 mb-1">${p.trim()}</span>`
+                        ).join('');
+                        
+                        // Highlight Logic
+                        document.querySelectorAll('.osi-layer').forEach(el => el.classList.remove('ring-4', 'ring-white', 'scale-105'));
+                        layerDiv.classList.add('ring-4', 'ring-white', 'scale-105');
+                    };
+
+                    stack.appendChild(layerDiv);
+                });
+
+                // Detail Box
+                const details = document.createElement('div');
+                details.className = 'w-full lg:w-2/3 bg-white rounded-xl shadow-lg border border-slate-200 p-8 min-h-[400px] flex flex-col justify-center relative overflow-hidden';
+                details.innerHTML = `
+                    <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                        <span class="text-9xl">🌐</span>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 id="osi-title" class="text-3xl font-bold text-slate-800 mb-4 border-b pb-4 border-slate-100">Hover over a layer</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-sm uppercase font-bold text-slate-400 mb-1">Core Function</h4>
+                                <p id="osi-desc" class="text-xl text-slate-700">Explore the stack on the left to see details here.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm uppercase font-bold text-slate-400 mb-2">Key Protocols & Devices</h4>
+                                <div id="osi-proto" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                wrapper.appendChild(stack);
+                wrapper.appendChild(details);
+                container.appendChild(wrapper);
+            },
+
+            renderLabs(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-extrabold text-slate-900">Lab Simulator: CLI Tools</h2>
+                        <p class="text-lg text-slate-600 mt-2">
+                            Module 4 focuses on diagnostics. Use this virtual terminal to practice the standard troubleshooting commands.
+                        </p>
+                    </div>
+                `;
+
+                const layout = document.createElement('div');
+                layout.className = 'flex flex-col lg:flex-row gap-6 bg-slate-900 rounded-xl p-4 shadow-2xl';
+
+                // Toolbox Sidebar
+                const toolbox = document.createElement('div');
+                toolbox.className = 'w-full lg:w-64 space-y-2';
+                toolbox.innerHTML = `<h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-3 px-2">Available Commands</h3>`;
+                
+                Object.keys(courseData.commands).forEach(cmd => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full text-left px-4 py-3 bg-slate-800 text-green-400 font-mono text-sm rounded hover:bg-slate-700 transition-colors border border-slate-700 flex items-center justify-between group';
+                    btn.innerHTML = `
+                        <span>> ${cmd}</span>
+                        <span class="text-slate-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">RUN</span>
+                    `;
+                    btn.onclick = () => this.runCommand(cmd);
+                    toolbox.appendChild(btn);
+                });
+
+                // Terminal Window
+                const terminal = document.createElement('div');
+                terminal.id = 'terminal-window';
+                terminal.className = 'flex-grow h-96 lg:h-[500px] bg-black rounded-lg border border-slate-700 p-4 font-mono text-sm overflow-y-auto relative';
+                terminal.innerHTML = `
+                    <div class="text-slate-500 mb-4">Microsoft Windows [Version 10.0.19045.2846]<br>(c) Microsoft Corporation. All rights reserved.</div>
+                    <div id="term-content"></div>
+                    <div class="mt-2 text-slate-100 flex">
+                        <span class="mr-2">C:\\Users\\Student></span>
+                        <span class="cursor-blink"></span>
+                    </div>
+                `;
+
+                layout.appendChild(toolbox);
+                layout.appendChild(terminal);
+                container.appendChild(layout);
+            },
+
+            // --- SIMULATION LOGIC ---
+            runCommand(cmdKey) {
+                const cmdData = courseData.commands[cmdKey];
+                const termContent = document.getElementById('term-content');
+                const termWindow = document.getElementById('terminal-window');
+                
+                // 1. Add the command line
+                const cmdLine = document.createElement('div');
+                cmdLine.className = "text-slate-100 mt-2";
+                cmdLine.innerHTML = `C:\\Users\\Student> ${cmdKey}`;
+                termContent.appendChild(cmdLine);
+
+                // 2. Simulate Delay & Typing of Output
+                const outputDiv = document.createElement('div');
+                outputDiv.className = "text-slate-300 mt-1 whitespace-pre-wrap";
+                termContent.appendChild(outputDiv);
+                
+                // Disable buttons temporarily? (Optional UX improvement)
+                
+                let i = 0;
+                const txt = cmdData.output;
+                const speed = 10; // Typing speed in ms
+
+                function typeWriter() {
+                    if (i < txt.length) {
+                        outputDiv.innerHTML += txt.charAt(i);
+                        i++;
+                        termWindow.scrollTop = termWindow.scrollHeight;
+                        setTimeout(typeWriter, speed);
+                    } else {
+                        // Done typing, add explanation
+                        const explain = document.createElement('div');
+                        explain.className = "text-yellow-500 text-xs mt-2 border-l-2 border-yellow-500 pl-2 opacity-80";
+                        explain.innerText = `[Instructor Note]: ${cmdData.desc}`;
+                        termContent.appendChild(explain);
+                        termWindow.scrollTop = termWindow.scrollHeight;
+                    }
+                }
+                
+                typeWriter();
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering IT Lab Environments - Course Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        /* Custom Scrollbar for inner content */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Animation utilities */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Slate & Teal (Professional, calm, tech-focused) -->
+    <!-- Application Structure Plan: The app uses a Dashboard/Navigator approach. 
+         1. 'Overview': High-level metrics (Duration, Method split) and objectives. 
+         2. 'Curriculum Map': An interactive timeline/grid allowing deep dives into the 4 modules without overwhelming the user.
+         3. 'Tech Stack': A comparative view of the tools (VMs vs Containers) using data from the report.
+         4. 'Logistics': Requirements and format. 
+         This structure transforms the linear outline into a non-linear exploration tool, allowing users to jump between "What will I learn?" and "How will I learn it?".
+    -->
+    <!-- Visualization & Content Choices:
+         - Methodology Split: Doughnut Chart (Chart.js) -> Visualizes the 30/70 Theory/Practice ratio emphasizing the hands-on nature.
+         - Time Distribution: Bar Chart (Chart.js) -> Shows equal weight (6h) across modules, reinforcing balance.
+         - Module Interaction: Clickable cards expanding into detailed lists -> Handles the nested bullet points of the report cleanly.
+         - Comparisons: Interactive Toggle (Vanilla JS) -> Switches between VirtualBox vs VMware feature lists based on report content.
+         - Icons: Unicode characters -> To maintain the "No SVG" rule while adding visual cues.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-teal-200 selection:text-teal-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">🖥️</span>
+                    <h1 class="font-bold text-xl text-slate-700 tracking-tight">IT Lab Master</h1>
+                </div>
+                <div class="flex space-x-4 items-center">
+                    <button onclick="app.navigate('overview')" id="nav-overview" class="px-3 py-2 rounded-md text-sm font-medium text-teal-600 bg-teal-50 hover:bg-teal-100 transition-colors">Overview</button>
+                    <button onclick="app.navigate('curriculum')" id="nav-curriculum" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Curriculum</button>
+                    <button onclick="app.navigate('tech-stack')" id="nav-tech-stack" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Tech Stack</button>
+                    <button onclick="app.navigate('logistics')" id="nav-logistics" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Logistics</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main id="app-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected via JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-300 py-6 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm">Prepared for Emplois-Québec Approval</p>
+            <p class="text-xs mt-2 text-slate-500">Based on Course Outline: Mastering IT Lab Environments</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Source Data Object
+        const courseData = {
+            title: "Mastering IT Lab Environments",
+            duration: "24 Hours",
+            type: "Non-Credited",
+            format: "Intensive Workshop / Continuing Education",
+            methodology: { theory: 30, practice: 70 },
+            audience: [
+                "Junior System Administrators",
+                "Network Technicians",
+                "IT Support Specialists",
+                "Students requiring practical lab skills"
+            ],
+            objectives: [
+                "Install and configure Type 2 Hypervisors (VirtualBox, VMware)",
+                "Simulate complex network topologies using GNS3",
+                "Deploy and manage containerized applications",
+                "Optimize host system resources for virtualization",
+                "Create isolated environments for testing and cybersecurity analysis"
+            ],
+            modules: [
+                {
+                    id: 1,
+                    title: "Virtualization Fundamentals & Oracle VirtualBox",
+                    hours: 6,
+                    icon: "📦",
+                    color: "border-blue-500",
+                    bg: "bg-blue-50",
+                    topics: [
+                        {
+                            main: "Introduction to Virtualization Concepts",
+                            subs: ["Host vs. Guest operating systems", "Hardware requirements (VT-x/AMD-V) and resource allocation"]
+                        },
+                        {
+                            main: "Oracle VirtualBox Administration",
+                            subs: ["Installation and managing the Extension Pack for USB/RDP support", "Configuring virtual hardware: storage controllers, network adapters, and RAM"]
+                        },
+                        {
+                            main: "Networking Modes in VirtualBox",
+                            subs: ["Understanding NAT vs. Bridged vs. Host-Only vs. Internal networks", "Establishing communication between guest VMs and the host"]
+                        },
+                        {
+                            main: "Lab Workflow Management",
+                            subs: ["Using Snapshots and Clones for disaster recovery and testing", "Importing and exporting appliances (OVA/OVF format)"]
+                        }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Industry Standard: VMware Workstation Pro",
+                    hours: 6,
+                    icon: "🏢",
+                    color: "border-indigo-500",
+                    bg: "bg-indigo-50",
+                    topics: [
+                        {
+                            main: "VMware Architecture & Interface",
+                            subs: ["Comparison with VirtualBox: Performance features and proprietary drivers", "Installation and integration with host operating systems"]
+                        },
+                        {
+                            main: "Advanced Networking Configuration",
+                            subs: ["Mastering the Virtual Network Editor (VMnet0 - VMnet8)", "Customizing bandwidth and packet loss simulation for testing"]
+                        },
+                        {
+                            main: "VMware Advanced Features",
+                            subs: ["Creating 'Linked Clones' to save disk space in large labs", "Taking, managing, and reverting complex snapshot trees", "Shared VMs and connecting to remote vSphere servers (introductory)"]
+                        }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Network Emulation with GNS3",
+                    hours: 6,
+                    icon: "🌐",
+                    color: "border-orange-500",
+                    bg: "bg-orange-50",
+                    topics: [
+                        {
+                            main: "GNS3 Architecture Setup",
+                            subs: ["Installing the GNS3 GUI and the GNS3 VM server", "Integrating GNS3 with local hypervisors (VMware/VirtualBox)"]
+                        },
+                        {
+                            main: "Image Management",
+                            subs: ["Importing Cisco IOS images and maximizing performance with Idle-PC values", "Adding virtual PCs (VPCS) and switch appliances"]
+                        },
+                        {
+                            main: "Building Complex Topologies",
+                            subs: ["Connecting emulated routers to real-world networks (bridging to the internet)", "Linking GNS3 devices to external Virtual Machines for realistic service testing"]
+                        }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Introduction to Containers & Integration",
+                    hours: 6,
+                    icon: "🐳",
+                    color: "border-teal-500",
+                    bg: "bg-teal-50",
+                    topics: [
+                        {
+                            main: "Containerization Fundamentals",
+                            subs: ["Virtual Machines vs. Containers: Architecture and resource usage differences", "Installing the container runtime (Docker Desktop/Podman)"]
+                        },
+                        {
+                            main: "Container Lab Management",
+                            subs: ["Pulling images from registries (Docker Hub)", "Basic lifecycle management: Run, Stop, Exec, and Logs", "Persistent storage: Understanding Volumes and Bind Mounts"]
+                        },
+                        {
+                            main: "Capstone Integration Lab",
+                            subs: ["Building a hybrid lab: A VM (Server) talking to a GNS3 Router, talking to a Container service", "Troubleshooting connectivity across different virtualization platforms"]
+                        }
+                    ]
+                }
+            ],
+            requirements: [
+                "Computer workstation with minimum 16GB RAM",
+                "BIOS virtualization enabled (VT-x / AMD-V)",
+                "Software installers (provided or downloaded in class)"
+            ]
+        };
+
+        // Application State
+        const app = {
+            currentPage: 'overview',
+            
+            init: () => {
+                app.renderOverview();
+            },
+
+            navigate: (page) => {
+                app.currentPage = page;
+                
+                // Update Nav Styling
+                document.querySelectorAll('nav button').forEach(btn => {
+                    btn.classList.remove('text-teal-600', 'bg-teal-50');
+                    btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+                });
+                const activeBtn = document.getElementById(`nav-${page}`);
+                if(activeBtn) {
+                    activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                    activeBtn.classList.add('text-teal-600', 'bg-teal-50');
+                }
+
+                // Render Content
+                const content = document.getElementById('app-content');
+                content.innerHTML = ''; // Clear current
+                
+                if (page === 'overview') app.renderOverview();
+                else if (page === 'curriculum') app.renderCurriculum();
+                else if (page === 'tech-stack') app.renderTechStack();
+                else if (page === 'logistics') app.renderLogistics();
+                
+                window.scrollTo(0,0);
+            },
+
+            renderOverview: () => {
+                const container = document.getElementById('app-content');
+                
+                // Section Context
+                const contextDiv = document.createElement('div');
+                contextDiv.className = "mb-8 fade-in";
+                contextDiv.innerHTML = `
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">Program Dashboard</h2>
+                    <p class="text-lg text-slate-600 max-w-3xl">
+                        Welcome to the course explorer for <span class="font-semibold text-teal-700">${courseData.title}</span>. 
+                        This interactive dashboard outlines the 24-hour intensive workshop designed to equip IT professionals with the skills to build robust laboratory environments. 
+                        Explore the metrics below to understand the course structure and target competencies.
+                    </p>
+                `;
+                container.appendChild(contextDiv);
+
+                // Grid Layout
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in";
+                
+                // Key Stats Card
+                grid.innerHTML += `
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-slate-100 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-slate-500 font-semibold uppercase text-xs tracking-wider mb-2">Total Duration</h3>
+                            <div class="text-5xl font-bold text-slate-800 mb-1">${courseData.duration}</div>
+                            <div class="text-sm text-teal-600 font-medium">${courseData.format}</div>
+                        </div>
+                        <div class="mt-6 p-3 bg-slate-50 rounded-lg">
+                            <h4 class="font-semibold text-slate-700 mb-1">Target Audience</h4>
+                            <ul class="text-sm text-slate-600 space-y-1">
+                                ${courseData.audience.map(a => `<li class="flex items-start"><span class="mr-2 text-teal-500">•</span>${a}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+
+                // Chart: Methodology
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-white p-6 rounded-xl shadow-md border border-slate-100";
+                chartCard.innerHTML = `
+                    <h3 class="text-slate-500 font-semibold uppercase text-xs tracking-wider mb-4">Teaching Methodology</h3>
+                    <div class="chart-container">
+                        <canvas id="methodologyChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-slate-400 mt-2">Heavily focused on practical application.</p>
+                `;
+                grid.appendChild(chartCard);
+
+                // Objectives List
+                grid.innerHTML += `
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-slate-100 lg:col-span-1 md:col-span-2 lg:col-start-3">
+                        <h3 class="text-slate-500 font-semibold uppercase text-xs tracking-wider mb-4">Core Competencies</h3>
+                        <ul class="space-y-3">
+                            ${courseData.objectives.map((obj, i) => `
+                                <li class="flex items-start p-2 hover:bg-slate-50 rounded transition-colors">
+                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold mr-3">${i + 1}</span>
+                                    <span class="text-sm text-slate-700 leading-snug">${obj}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                container.appendChild(grid);
+
+                // Initialize Chart
+                setTimeout(() => {
+                    const ctx = document.getElementById('methodologyChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory', 'Practical Labs'],
+                            datasets: [{
+                                data: [courseData.methodology.theory, courseData.methodology.practice],
+                                backgroundColor: ['#e2e8f0', '#0d9488'], // Slate-200, Teal-600
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return ` ${context.label}: ${context.raw}%`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderCurriculum: () => {
+                const container = document.getElementById('app-content');
+                
+                // Context
+                const contextDiv = document.createElement('div');
+                contextDiv.className = "mb-8 fade-in";
+                contextDiv.innerHTML = `
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">Curriculum Explorer</h2>
+                    <p class="text-lg text-slate-600 max-w-3xl">
+                        The 24-hour course is divided into four distinct 6-hour modules. 
+                        Click on any module card below to reveal the detailed breakdown of topics and sub-topics covered in that session.
+                    </p>
+                `;
+                container.appendChild(contextDiv);
+
+                // Wrapper for Flex layout
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex flex-col lg:flex-row gap-6 fade-in";
+
+                // Module List (Left Side)
+                const listDiv = document.createElement('div');
+                listDiv.className = "w-full lg:w-1/3 space-y-4";
+                
+                courseData.modules.forEach(mod => {
+                    const card = document.createElement('button');
+                    card.className = `w-full text-left p-4 rounded-lg border-l-4 shadow-sm hover:shadow-md transition-all bg-white ${mod.color}`;
+                    card.onclick = () => app.loadModuleDetail(mod.id);
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="text-2xl">${mod.icon}</span>
+                            <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">${mod.hours} HRS</span>
+                        </div>
+                        <h4 class="font-bold text-slate-800 mt-2">Module ${mod.id}</h4>
+                        <p class="text-sm text-slate-500 truncate">${mod.title}</p>
+                    `;
+                    listDiv.appendChild(card);
+                });
+
+                // Detail View (Right Side)
+                const detailDiv = document.createElement('div');
+                detailDiv.id = 'module-detail-view';
+                detailDiv.className = "w-full lg:w-2/3 bg-white rounded-xl shadow-lg border border-slate-200 p-8 min-h-[400px]";
+                detailDiv.innerHTML = `<div class="h-full flex items-center justify-center text-slate-400">Select a module to view details</div>`;
+
+                wrapper.appendChild(listDiv);
+                wrapper.appendChild(detailDiv);
+                container.appendChild(wrapper);
+                
+                // Auto-load Module 1
+                app.loadModuleDetail(1);
+            },
+
+            loadModuleDetail: (id) => {
+                const mod = courseData.modules.find(m => m.id === id);
+                const view = document.getElementById('module-detail-view');
+                
+                // Simple fade transition
+                view.style.opacity = '0';
+                
+                setTimeout(() => {
+                    view.innerHTML = `
+                        <div class="flex items-center mb-6">
+                            <span class="text-4xl mr-4">${mod.icon}</span>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-800">${mod.title}</h3>
+                                <p class="text-teal-600 font-medium">${mod.hours} Hours of Instruction</p>
+                            </div>
+                        </div>
+                        <hr class="border-slate-100 mb-6">
+                        <div class="space-y-6">
+                            ${mod.topics.map(topic => `
+                                <div>
+                                    <h4 class="font-bold text-slate-700 mb-2 flex items-center">
+                                        <span class="w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
+                                        ${topic.main}
+                                    </h4>
+                                    <ul class="ml-4 pl-4 border-l border-slate-200 space-y-2">
+                                        ${topic.subs.map(sub => `
+                                            <li class="text-sm text-slate-600 hover:text-slate-900 transition-colors">${sub}</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    view.style.opacity = '1';
+                }, 200);
+            },
+
+            renderTechStack: () => {
+                const container = document.getElementById('app-content');
+                
+                const contextDiv = document.createElement('div');
+                contextDiv.className = "mb-8 fade-in";
+                contextDiv.innerHTML = `
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">Technology Stack Analysis</h2>
+                    <p class="text-lg text-slate-600 max-w-3xl">
+                        This course covers a spectrum of virtualization technologies. 
+                        Interact with the comparisons below to understand the differences between the core tools taught in the lab environment.
+                    </p>
+                `;
+                container.appendChild(contextDiv);
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-8 fade-in";
+
+                // Comparison 1: VirtualBox vs VMware (Module 1 vs Module 2)
+                const hvCard = document.createElement('div');
+                hvCard.className = "bg-white p-6 rounded-xl shadow-md border border-slate-100";
+                hvCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg text-slate-800">Hypervisor Comparison</h3>
+                        <span class="text-2xl">📦 vs 🏢</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <h4 class="font-bold text-blue-800 text-sm">Oracle VirtualBox</h4>
+                            <p class="text-xs text-blue-600 mt-1">Focus: Fundamentals & Open Source</p>
+                            <ul class="mt-2 text-sm text-slate-700 list-disc list-inside">
+                                <li>Extension Pack required for USB/RDP</li>
+                                <li>Great for learning concepts</li>
+                                <li>Snapshots & Cloning supported</li>
+                            </ul>
+                        </div>
+                        <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <h4 class="font-bold text-indigo-800 text-sm">VMware Workstation Pro</h4>
+                            <p class="text-xs text-indigo-600 mt-1">Focus: Industry Standard & Performance</p>
+                            <ul class="mt-2 text-sm text-slate-700 list-disc list-inside">
+                                <li>Proprietary drivers = Better performance</li>
+                                <li>Advanced Network Editor (VMnet0-8)</li>
+                                <li>Linked Clones (Disk space efficiency)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                // Comparison 2: VMs vs Containers (Module 4)
+                const containerCard = document.createElement('div');
+                containerCard.className = "bg-white p-6 rounded-xl shadow-md border border-slate-100";
+                containerCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg text-slate-800">Architecture Shift</h3>
+                        <span class="text-2xl">🖥️ vs 🐳</span>
+                    </div>
+                    
+                    <div class="relative pt-6">
+                         <!-- Simple Visual Representation of Architecture -->
+                         <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                            <span>High Isolation (VM)</span>
+                            <span>High Efficiency (Container)</span>
+                         </div>
+                         <div class="h-4 bg-slate-100 rounded-full overflow-hidden flex">
+                            <div class="w-1/2 bg-indigo-400 hover:bg-indigo-500 transition-colors cursor-help" title="Virtual Machines run complete Guest OS"></div>
+                            <div class="w-1/2 bg-teal-400 hover:bg-teal-500 transition-colors cursor-help" title="Containers share Host Kernel"></div>
+                         </div>
+                         <div class="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>Heavy Resource Usage</span>
+                            <span>Lightweight</span>
+                         </div>
+                    </div>
+
+                    <div class="mt-6 space-y-3">
+                         <div class="flex items-start">
+                            <div class="bg-indigo-100 p-2 rounded mr-3"><span class="text-indigo-600 font-bold">VM</span></div>
+                            <div>
+                                <h5 class="text-sm font-bold">Virtual Machine</h5>
+                                <p class="text-xs text-slate-600">Complete Hardware Virtualization. Best for legacy apps, total isolation, and different OS kernels.</p>
+                            </div>
+                         </div>
+                         <div class="flex items-start">
+                            <div class="bg-teal-100 p-2 rounded mr-3"><span class="text-teal-600 font-bold">CT</span></div>
+                            <div>
+                                <h5 class="text-sm font-bold">Container</h5>
+                                <p class="text-xs text-slate-600">OS-Level Virtualization. Best for microservices, rapid deployment, and high density.</p>
+                            </div>
+                         </div>
+                    </div>
+                `;
+
+                grid.appendChild(hvCard);
+                grid.appendChild(containerCard);
+
+                // GNS3 Special Mention
+                const gns3Card = document.createElement('div');
+                gns3Card.className = "bg-orange-50 p-6 rounded-xl shadow-sm border border-orange-100 mt-8 lg:col-span-2 flex flex-col md:flex-row items-center";
+                gns3Card.innerHTML = `
+                    <div class="mb-4 md:mb-0 md:mr-6 text-4xl">🌐</div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-orange-900 text-lg">The Bridge: GNS3</h3>
+                        <p class="text-sm text-orange-800 mt-1">
+                            GNS3 (Module 3) acts as the integration layer. The course creates a <strong>Hybrid Lab</strong> where VMs (Module 1/2) communicate through emulated Cisco Routers (Module 3) to reach Container Services (Module 4).
+                        </p>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <span class="inline-block bg-white text-orange-600 px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Capstone Integration</span>
+                    </div>
+                `;
+                container.appendChild(grid);
+                container.appendChild(gns3Card);
+            },
+
+            renderLogistics: () => {
+                const container = document.getElementById('app-content');
+                
+                const contextDiv = document.createElement('div');
+                contextDiv.className = "mb-8 fade-in";
+                contextDiv.innerHTML = `
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">Course Logistics & Requirements</h2>
+                    <p class="text-lg text-slate-600 max-w-3xl">
+                        To ensure success in this hands-on workshop, participants must meet specific hardware requirements. 
+                        Review the checklist below.
+                    </p>
+                `;
+                container.appendChild(contextDiv);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden fade-in";
+                
+                wrapper.innerHTML = `
+                    <div class="bg-slate-800 px-6 py-4">
+                        <h3 class="text-white font-bold">Student Checklist</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            ${courseData.requirements.map(req => `
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-5 w-5 rounded border border-slate-300 bg-slate-50 flex items-center justify-center mt-1 mr-3">
+                                        <span class="text-teal-600 font-bold">✓</span>
+                                    </div>
+                                    <p class="text-slate-700">${req}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="mt-8 pt-6 border-t border-slate-100">
+                             <h4 class="font-bold text-slate-800 mb-2">Target Audience</h4>
+                             <div class="flex flex-wrap gap-2">
+                                ${courseData.audience.map(a => `
+                                    <span class="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium border border-teal-100">${a}</span>
+                                `).join('')}
+                             </div>
+                        </div>
+
+                        <div class="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex items-start">
+                            <span class="text-yellow-600 mr-2">⚠️</span>
+                            <p class="text-xs text-yellow-800">
+                                <strong>Note:</strong> This is a non-credited workshop focused on practical job-ready skills. 
+                                Duration is strictly 24 hours.
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(wrapper);
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
+
+
+
+

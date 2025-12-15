@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Firewalls: Iptables to Nftables</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Terminal Font & Scrollbar */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background-color: #0f172a;
+            border-left: 4px solid #22c55e;
+            padding: 1rem;
+            color: #e2e8f0;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+    <!-- Chosen Palette: "Kernel Panic" 
+         Background: Slate-900 (Terminal Black). 
+         Primary: Green-500 (Success/Console). 
+         Secondary: Amber-500 (Warnings/Legacy). 
+         Text: Slate-300 (Readability).
+    -->
+    
+    <!-- Application Structure Plan:
+         1. Dashboard: Course Metadata (15h, Non-credited), Audience tags, and Theory/Lab Chart.
+         2. Modules: 4 Cards representing the modules. Click to expand details.
+         3. Syntax Diff: A split-view tool. User selects a task (e.g., "Allow SSH"), app shows `iptables` syntax vs `nft` syntax.
+         4. Netfilter Hooks: A step-by-step visualizer of packet flow through the kernel (Prerouting -> Input/Forward -> Output -> Postrouting).
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology Chart: Doughnut chart showing 30% Theory / 70% Lab.
+         - Syntax Diff: Text comparison to directly address learning objective "Migrate legacy iptables rulesets".
+         - Packet Flow: CSS-based flow diagram to visualize Module 1 concepts.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-900 text-slate-300 font-mono antialiased selection:bg-green-900 selection:text-green-100">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🐧</span>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-tight text-white">Netfilter<span class="text-green-500">.Academy</span></h1>
+                        <p class="text-[10px] text-slate-500 hidden sm:block">LINUX FIREWALLS COURSE</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-xs font-bold text-green-400 bg-slate-900 border border-green-500/50 transition-all hover:bg-slate-800 whitespace-nowrap">./STATUS</button>
+                    <button onclick="app.navigate('curriculum')" id="nav-curriculum" class="px-3 py-2 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">./MODULES</button>
+                    <button onclick="app.navigate('syntax')" id="nav-syntax" class="px-3 py-2 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">./SYNTAX_DIFF</button>
+                    <button onclick="app.navigate('flow')" id="nav-flow" class="px-3 py-2 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap">./PACKET_FLOW</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-500 py-8 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm">Linux Firewalls: From Iptables to Nftables</p>
+            <p class="text-xs mt-2 opacity-60">15 Hours • Non-Credited • Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "Linux Firewalls: From Iptables to Nftables",
+                duration: "15 Hours",
+                audience: ["SysAdmins", "Linux Technicians", "DevOps Engineers"],
+                methodology: { theory: 30, lab: 70 }
+            },
+            modules: [
+                {
+                    id: 1,
+                    title: "The Netfilter Legacy & Architecture",
+                    hours: 3,
+                    icon: "🏛️",
+                    desc: "From ipchains to Netfilter. Understanding kernel hooks and packet lifecycle.",
+                    topics: ["Kernel Hooks (Pre/Post Routing)", "User-space vs Kernel-space", "Stateless vs Stateful Inspection"]
+                },
+                {
+                    id: 2,
+                    title: "The Industry Standard: Iptables",
+                    hours: 5,
+                    icon: "🧱",
+                    desc: "Mastering the Tables hierarchy (Filter, NAT, Mangle) and default policies.",
+                    topics: ["Syntax Structure (-m, -j, -p)", "Connection Tracking (conntrack)", "Logging & Rejecting"]
+                },
+                {
+                    id: 3,
+                    title: "The Modern Standard: Nftables",
+                    hours: 5,
+                    icon: "⚡",
+                    desc: "Atomic updates, dual-stack support, and performance optimization.",
+                    topics: ["Bytecode Execution", "Sets & Maps (Dictionaries)", "Ingress Filtering"]
+                },
+                {
+                    id: 4,
+                    title: "Migration & Operations",
+                    hours: 2,
+                    icon: "🔄",
+                    desc: "Transition strategies using iptables-translate and persistence tools.",
+                    topics: ["Translation Tools", "Persistence (nft -f)", "Troubleshooting/Tracing"]
+                }
+            ],
+            syntaxPairs: [
+                {
+                    task: "Allow Incoming SSH",
+                    iptables: "iptables -A INPUT -p tcp --dport 22 -j ACCEPT",
+                    nftables: "nft add rule ip filter input tcp dport 22 accept",
+                    note: "Nftables uses a more natural language syntax."
+                },
+                {
+                    task: "Block Specific IP",
+                    iptables: "iptables -A INPUT -s 192.168.1.5 -j DROP",
+                    nftables: "nft add rule ip filter input ip saddr 192.168.1.5 drop",
+                    note: "Nftables creates a rule within the ip/filter/input chain."
+                },
+                {
+                    task: "Multiple Ports",
+                    iptables: "iptables -A INPUT -p tcp -m multiport --dports 80,443 -j ACCEPT",
+                    nftables: "nft add rule ip filter input tcp dport { 80, 443 } accept",
+                    note: "Nftables uses anonymous sets { } natively for better performance."
+                },
+                {
+                    task: "Count Packets",
+                    iptables: "iptables -A INPUT -p tcp --dport 80 -j ACCEPT (implicit counter)",
+                    nftables: "nft add rule ip filter input tcp dport 80 counter accept",
+                    note: "Counters must be explicitly added in Nftables."
+                }
+            ]
+        };
+
+        const app = {
+            view: 'dashboard',
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'curriculum': this.renderCurriculum(wrapper); break;
+                    case 'syntax': this.renderSyntax(wrapper); break;
+                    case 'flow': this.renderFlow(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'curriculum', 'syntax', 'flow'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded-md text-xs font-bold text-green-400 bg-slate-900 border border-green-500/50 transition-all shadow-[0_0_10px_rgba(34,197,94,0.2)] whitespace-nowrap";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                container.innerHTML = `
+                    <div class="mb-10 border-b border-slate-800 pb-6">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="h-12 w-1 bg-green-500 rounded-full"></div>
+                            <div>
+                                <h2 class="text-4xl font-extrabold text-white tracking-tight">SYSTEM STATUS: <span class="text-green-500">ONLINE</span></h2>
+                                <p class="text-lg text-slate-400 mt-1">Course: Linux Firewalls (Iptables -> Nftables)</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-400 max-w-2xl leading-relaxed">
+                            A specialized 15-hour technical workshop covering the evolution of Linux packet filtering. 
+                            From the legacy stability of <strong>Iptables</strong> to the high-performance architecture of <strong>Nftables</strong>.
+                        </p>
+                    </div>
+                `;
+
+                // Grid
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10";
+                
+                const stats = [
+                    { label: "Duration", val: "15 Hours", icon: "⏱️", color: "text-blue-400" },
+                    { label: "Modules", val: "4 Core Units", icon: "📦", color: "text-amber-400" },
+                    { label: "Lab Ratio", val: "70% Practical", icon: "⌨️", color: "text-green-400" },
+                    { label: "Target", val: "SysAdmins", icon: "👥", color: "text-purple-400" }
+                ];
+
+                stats.forEach(s => {
+                    grid.innerHTML += `
+                        <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-lg flex items-center gap-4 hover:border-green-500/30 transition-colors">
+                            <span class="text-2xl">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-xl font-bold ${s.color} font-mono">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(grid);
+
+                // Split Layout
+                const layout = document.createElement('div');
+                layout.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Learning Objectives
+                const objCard = document.createElement('div');
+                objCard.className = "lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6";
+                objCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center">
+                        <span class="text-green-500 mr-2">></span> Execution Plan
+                    </h3>
+                    <div class="space-y-4 font-mono text-sm">
+                        <div class="flex items-start">
+                            <span class="text-green-500 mr-3">[OK]</span>
+                            <span class="text-slate-300">Explain the evolution of Netfilter framework (ipchains to nftables).</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-green-500 mr-3">[OK]</span>
+                            <span class="text-slate-300">Create stateful firewall rules using Iptables syntax.</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-green-500 mr-3">[OK]</span>
+                            <span class="text-slate-300">Design structured, optimized rulesets with Nftables.</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-green-500 mr-3">[OK]</span>
+                            <span class="text-slate-300">Utilize Sets/Maps for high-performance dynamic blocking.</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-green-500 mr-3">[OK]</span>
+                            <span class="text-slate-300">Migrate legacy rulesets to modern formats.</span>
+                        </div>
+                    </div>
+                `;
+
+                // Chart
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col";
+                chartCard.innerHTML = `
+                    <h3 class="text-lg font-bold text-white mb-2">Methodology</h3>
+                    <p class="text-xs text-slate-500 mb-4 font-mono">alloc_memory: practical_labs >> theory</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                layout.appendChild(objCard);
+                layout.appendChild(chartCard);
+                container.appendChild(layout);
+
+                setTimeout(() => {
+                    new Chart(document.getElementById('methodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory (Architecture)', 'Labs (Building/Migrating)'],
+                            datasets: [{
+                                data: [30, 70],
+                                backgroundColor: ['#334155', '#22c55e'], // Slate-700, Green-500
+                                borderColor: '#0f172a',
+                                borderWidth: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'monospace' } } }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderCurriculum(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white tracking-tight">Kernel Modules</h2>
+                        <p class="text-slate-400 mt-2 font-mono text-sm">/etc/course/modules.conf</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 gap-4 max-w-4xl mx-auto";
+
+                courseData.modules.forEach(mod => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-800 border-l-4 border-slate-600 rounded-r-lg p-6 hover:bg-slate-800/80 transition-all cursor-pointer group";
+                    card.onclick = (e) => {
+                        const content = card.querySelector('.mod-content');
+                        content.classList.toggle('hidden');
+                        const isHidden = content.classList.contains('hidden');
+                        card.style.borderLeftColor = isHidden ? '#475569' : '#22c55e';
+                    };
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="text-2xl bg-slate-900 p-2 rounded">${mod.icon}</div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-white group-hover:text-green-400 transition-colors font-mono">
+                                        Module 0${mod.id}: ${mod.title}
+                                    </h3>
+                                    <span class="text-xs bg-slate-900 text-slate-400 px-2 py-1 rounded border border-slate-700 font-mono">${mod.hours} HOURS</span>
+                                </div>
+                            </div>
+                            <div class="text-slate-500 font-mono text-xl group-hover:text-green-500 transition-colors">+</div>
+                        </div>
+                        <div class="mod-content hidden mt-4 pt-4 border-t border-slate-700 pl-14">
+                            <p class="text-slate-400 mb-3 italic">"${mod.desc}"</p>
+                            <ul class="space-y-2">
+                                ${mod.topics.map(t => `<li class="text-sm text-slate-300 font-mono flex items-center"><span class="text-green-500 mr-2">></span>${t}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+            },
+
+            renderSyntax(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Syntax Translator</h2>
+                        <p class="text-slate-400 mt-2 font-mono">iptables-translate --visual-mode</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "grid grid-cols-1 lg:grid-cols-4 gap-6 h-full";
+
+                // Sidebar controls
+                const sidebar = document.createElement('div');
+                sidebar.className = "lg:col-span-1 space-y-2";
+                
+                courseData.syntaxPairs.forEach((pair, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-3 rounded bg-slate-800 border border-slate-700 hover:border-green-500 text-slate-300 font-mono text-xs transition-all";
+                    btn.innerText = pair.task;
+                    btn.onclick = () => app.showDiff(index);
+                    sidebar.appendChild(btn);
+                });
+
+                // Display Area
+                const display = document.createElement('div');
+                display.className = "lg:col-span-3 space-y-6";
+                display.id = "diff-display";
+
+                wrapper.appendChild(sidebar);
+                wrapper.appendChild(display);
+                container.appendChild(wrapper);
+
+                // Load first
+                setTimeout(() => app.showDiff(0), 50);
+            },
+
+            showDiff(index) {
+                const pair = courseData.syntaxPairs[index];
+                const display = document.getElementById('diff-display');
+                
+                display.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 fade-in">
+                        <h3 class="text-xl font-bold text-white mb-6 border-b border-slate-800 pb-2">${pair.task}</h3>
+                        
+                        <div class="mb-6">
+                            <div class="flex justify-between text-xs font-bold text-amber-500 mb-2 uppercase tracking-wider">
+                                <span>Legacy (Iptables)</span>
+                                <span>/sbin/iptables</span>
+                            </div>
+                            <div class="code-block font-mono text-sm">
+                                ${pair.iptables}
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex justify-between text-xs font-bold text-green-500 mb-2 uppercase tracking-wider">
+                                <span>Modern (Nftables)</span>
+                                <span>/usr/sbin/nft</span>
+                            </div>
+                            <div class="code-block font-mono text-sm" style="border-left-color: #22c55e;">
+                                ${pair.nftables}
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800 p-4 rounded border-l-4 border-blue-500">
+                            <p class="text-sm text-slate-300">
+                                <strong class="text-blue-400">Analysis:</strong> ${pair.note}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderFlow(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Packet Lifecycle Visualizer</h2>
+                        <p class="text-slate-400 mt-2 font-mono">Visualizing Kernel Hooks (Module 1)</p>
+                    </div>
+                `;
+
+                // Visualizer Container
+                const vis = document.createElement('div');
+                vis.className = "bg-slate-800 p-8 rounded-xl border border-slate-700 relative overflow-hidden min-h-[400px] flex flex-col items-center justify-center";
+                
+                vis.innerHTML = `
+                    <div class="flex justify-between w-full max-w-3xl mb-12 relative z-10">
+                        <div class="text-center w-24">
+                            <div class="text-3xl mb-2">🌐</div>
+                            <div class="text-xs font-bold text-slate-500">NETWORK</div>
+                        </div>
+                        <div class="text-center w-24">
+                            <div class="text-3xl mb-2">🖥️</div>
+                            <div class="text-xs font-bold text-slate-500">LOCAL PROCESS</div>
+                        </div>
+                    </div>
+
+                    <!-- Flow Path -->
+                    <div class="relative w-full max-w-3xl h-2 bg-slate-700 rounded-full mb-8">
+                        <div id="packet" class="absolute top-1/2 -mt-2 w-4 h-4 bg-green-500 rounded-full shadow-[0_0_10px_#22c55e] transition-all duration-1000" style="left: 0;"></div>
+                    </div>
+
+                    <!-- Stages -->
+                    <div class="grid grid-cols-5 gap-2 w-full max-w-4xl text-center">
+                        <div id="hook-1" class="p-2 rounded border border-slate-600 text-xs font-bold text-slate-500 transition-all">PREROUTING</div>
+                        <div id="hook-2" class="p-2 rounded border border-slate-600 text-xs font-bold text-slate-500 transition-all">INPUT</div>
+                        <div id="hook-3" class="p-2 rounded border border-slate-600 text-xs font-bold text-slate-500 transition-all">PROCESS</div>
+                        <div id="hook-4" class="p-2 rounded border border-slate-600 text-xs font-bold text-slate-500 transition-all">OUTPUT</div>
+                        <div id="hook-5" class="p-2 rounded border border-slate-600 text-xs font-bold text-slate-500 transition-all">POSTROUTING</div>
+                    </div>
+
+                    <div class="mt-8">
+                        <button onclick="app.runPacket()" class="bg-green-600 hover:bg-green-500 text-white font-mono font-bold py-2 px-6 rounded transition-colors shadow-lg">
+                            SEND PACKET
+                        </button>
+                    </div>
+                    
+                    <div id="flow-log" class="mt-4 h-8 text-green-400 font-mono text-sm font-bold"></div>
+                `;
+
+                container.appendChild(vis);
+            },
+
+            runPacket() {
+                const packet = document.getElementById('packet');
+                const log = document.getElementById('flow-log');
+                
+                // Reset
+                packet.style.left = '0%';
+                packet.style.backgroundColor = '#22c55e';
+                log.innerText = "Packet arriving on Interface...";
+                document.querySelectorAll('[id^="hook-"]').forEach(el => {
+                    el.className = "p-2 rounded border border-slate-600 text-xs font-bold text-slate-500 transition-all";
+                });
+
+                // Animation Sequence
+                const stages = [
+                    { pct: '10%', hook: 'hook-1', msg: "PREROUTING: DNAT decision?" },
+                    { pct: '30%', hook: 'hook-2', msg: "INPUT: Is it for me?" },
+                    { pct: '50%', hook: 'hook-3', msg: "PROCESS: Application Handling (Web/SSH)" },
+                    { pct: '70%', hook: 'hook-4', msg: "OUTPUT: Generating Response" },
+                    { pct: '90%', hook: 'hook-5', msg: "POSTROUTING: SNAT/Masquerade" },
+                    { pct: '100%', hook: null, msg: "Packet sent to Interface." }
+                ];
+
+                let step = 0;
+                
+                function nextStep() {
+                    if (step >= stages.length) return;
+                    
+                    const s = stages[step];
+                    packet.style.left = s.pct;
+                    log.innerText = s.msg;
+
+                    if (s.hook) {
+                        const h = document.getElementById(s.hook);
+                        h.className = "p-2 rounded border border-green-500 bg-green-500/10 text-xs font-bold text-green-400 transition-all scale-110 shadow-[0_0_10px_rgba(34,197,94,0.3)]";
+                    }
+
+                    step++;
+                    setTimeout(nextStep, 1000);
+                }
+
+                setTimeout(nextStep, 100);
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>

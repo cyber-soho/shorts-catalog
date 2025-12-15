@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber.SoHo | Modern IT & Logistics Education</title>
+  <meta name="copyright" content="© 2025 Cyber.SoHo">
+  <meta name="author" content="Cyber.SoHo">
+  <meta name="license" content="CC BY-NC-ND 4.0">
+  <meta name="description" content="Specialized non-credited college courses in IT, Cybersecurity, DevOps, AI, and Logistics.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1f2937; }
+    .chart-container { position: relative; width: 100%; max-width: 900px; margin: 0 auto; height: 400px; }
+    .nav-btn.active { background-color: #374151; color: #fff; }
+    
+    /* Card Styles */
+    .course-card { 
+      transition: transform .2s ease, box-shadow .2s ease; 
+      border-left-width: 4px; 
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .course-card:not(.disabled):hover { 
+      transform: translateY(-5px); 
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); 
+      cursor: pointer;
+    }
+    .course-card.disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      background-color: #f3f4f6;
+    }
+
+    /* Tree Diagram Styles */
+    #path-diagram-container {
+        overflow-x: auto;
+        padding: 2rem;
+        background-color: #1f2937;
+        border-radius: 0.5rem;
+    }
+    .tree { white-space: nowrap; padding-left: 0; }
+    .tree ul { padding-left: 20px; margin-left: 10px; border-left: 1px solid #4b5563; }
+    .tree li { list-style-type: none; position: relative; padding: 5px 0 5px 20px; }
+    .tree li::before { content: ""; position: absolute; top: 21px; left: 0; width: 20px; height: 1px; background-color: #4b5563; }
+    .tree > ul > li:last-child { padding-bottom: 0; }
+    .tree li:last-child::after { display: none; }
+    
+    .tree a, .tree span.node-label {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background-color: #374151;
+        color: #e5e7eb;
+        text-decoration: none;
+        transition: background-color .2s ease;
+        border: 1px solid #4b5563;
+        font-size: 0.9rem;
+    }
+    .tree a:hover { background-color: #4f5e71; color: #fff; }
+    .tree > li > span.node-label { display: none; } /* Hide root */
+    
+    /* Category Nodes */
+    .tree > ul > li > span.node-label {
+        font-weight: bold;
+        font-size: 1.1em;
+        background-color: #111827;
+        color: #fff;
+        border-color: #374151;
+    }
+
+    /* Toggle Buttons */
+    .tree span.toggleable {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        padding-left: 20px;
+    }
+    .tree span.toggleable::before {
+        content: '−';
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: bold;
+        color: #9ca3af;
+        width: 1em;
+        text-align: center;
+    }
+    .tree span.toggleable.collapsed::before { content: '+'; }
+    .tree ul.collapsed { display: none; }
+
+    /* Smooth Scroll */
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="antialiased">
+
+<!-- Navigation -->
+<header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-40">
+  <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🎓</span>
+        <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Cyber<span class="text-indigo-600">.SoHo</span></h1>
+      </div>
+      <div class="hidden md:flex items-center space-x-1">
+        <button onclick="scrollToSection('overview')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">Overview</button>
+        <button onclick="scrollToSection('core')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">Core IT & Logistics</button>
+        <button onclick="scrollToSection('cyber')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">Cybersecurity</button>
+        <button onclick="scrollToSection('devops')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">DevOps</button>
+        <button onclick="scrollToSection('ai-soft')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">AI & Soft Skills</button>
+        <button onclick="scrollToSection('path-diagram')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">Visualizer</button>
+        <button onclick="scrollToSection('legal')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">Legal</button>
+      </div>
+      <!-- Mobile Menu Button (simplified) -->
+      <div class="md:hidden">
+        <select onchange="scrollToSection(this.value)" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          <option value="overview">Overview</option>
+          <option value="core">Core Topics</option>
+          <option value="cyber">Cybersecurity</option>
+          <option value="devops">DevOps</option>
+          <option value="ai-soft">AI & Soft Skills</option>
+          <option value="path-diagram">Visualizer</option>
+          <option value="legal">Legal</option>
+        </select>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+  <!-- Overview Section -->
+  <section id="overview" class="text-center mb-16 scroll-mt-24">
+    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Educational Course Catalog</h2>
+    <p class="max-w-4xl mx-auto text-lg text-gray-600 mb-8">
+      Specialized 15-45 hour non-credited college courses bridging Modern IT, Logistics, Cybersecurity, and AI.
+    </p>
+    <div class="chart-container">
+      <canvas id="courseChart" aria-label="Course Distribution Chart" role="img"></canvas>
+    </div>
+  </section>
+
+  <!-- Core Topics -->
+  <section id="core" class="py-12 scroll-mt-24 border-t border-gray-200">
+    <div class="text-left mb-8">
+      <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <span class="bg-indigo-100 text-indigo-700 p-2 rounded-lg text-2xl">📦</span> 
+        Core Topics: IT & Logistics
+      </h2>
+      <p class="mt-2 text-gray-600">Foundational knowledge for modern infrastructure and global supply chains.</p>
+    </div>
+    <div id="core-grid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+  </section>
+
+  <!-- Cybersecurity -->
+  <section id="cyber" class="py-12 scroll-mt-24 border-t border-gray-200">
+    <div class="text-left mb-8">
+      <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <span class="bg-red-100 text-red-700 p-2 rounded-lg text-2xl">🛡️</span> 
+        Cybersecurity
+      </h2>
+      <p class="mt-2 text-gray-600">From kernel-level firewalls to SOC operations and anonymity.</p>
+    </div>
+    <div id="cyber-grid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"></div>
+  </section>
+
+  <!-- DevOps -->
+  <section id="devops" class="py-12 scroll-mt-24 border-t border-gray-200">
+    <div class="text-left mb-8">
+      <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <span class="bg-blue-100 text-blue-700 p-2 rounded-lg text-2xl">🚀</span> 
+        DevOps & Cloud
+      </h2>
+      <p class="mt-2 text-gray-600">Automation, Virtualization, and Multi-Cloud Architectures.</p>
+    </div>
+    <div id="devops-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </section>
+
+  <!-- AI & Soft Skills -->
+  <section id="ai-soft" class="py-12 scroll-mt-24 border-t border-gray-200">
+    <div class="grid lg:grid-cols-2 gap-12">
+        <!-- AI -->
+        <div>
+            <div class="text-left mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                    <span class="bg-purple-100 text-purple-700 p-2 rounded-lg text-2xl">🤖</span> 
+                    Artificial Intelligence
+                </h2>
+                <p class="mt-2 text-gray-600">Offline AI tools for self-productivity.</p>
+            </div>
+            <div id="ai-grid" class="grid gap-6"></div>
+        </div>
+
+        <!-- Soft Skills -->
+        <div>
+            <div class="text-left mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                    <span class="bg-amber-100 text-amber-700 p-2 rounded-lg text-2xl">🧠</span> 
+                    Soft Skills & Future Tech
+                </h2>
+                <p class="mt-2 text-gray-600">Navigating the human element in the age of algorithms.</p>
+            </div>
+            <div id="soft-grid" class="grid gap-6"></div>
+        </div>
+    </div>
+  </section>
+
+  <!-- Visualizer -->
+  <section id="path-diagram" class="py-12 scroll-mt-24 bg-gray-900 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 text-white mt-12">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-white">Curriculum Path Visualizer</h2>
+        <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">Interactive mind map of the full Cyber.SoHo framework.</p>
+        </div>
+        <div id="path-diagram-container" class="bg-gray-800/50 border border-gray-700 rounded-xl shadow-2xl">
+        <!-- Diagram injected via JS -->
+        </div>
+    </div>
+  </section>
+
+  <!-- Navigation Guide -->
+  <section id="navigation-guide" class="py-12 scroll-mt-24 bg-indigo-50 rounded-xl my-12 p-8">
+    <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">How to Navigate This Site</h2>
+    </div>
+    <div class="max-w-4xl mx-auto text-gray-700 space-y-4 text-sm md:text-base">
+        <ul class="list-disc list-inside space-y-2">
+            <li><strong>Topic Sections:</strong> Use the top navigation to jump between Core, Cyber, DevOps, AI, and Soft Skills.</li>
+            <li><strong>Accessing Content:</strong> Click on any active course card (white background) to open the detailed HTML document in a <strong>new tab</strong>.</li>
+            <li><strong>Coming Soon:</strong> Greyed-out cards indicate courses currently in development. Links will be added when available.</li>
+            <li><strong>Visualizer:</strong> Use the dark-mode interactive tree diagram below to explore the hierarchical structure of the curriculum. Click items with a <span class="font-mono text-xs">+</span> or <span class="font-mono text-xs">-</span> to expand/collapse.</li>
+        </ul>
+    </div>
+  </section>
+
+  <!-- Footer / Legal -->
+  <footer id="legal" class="mt-16 pt-12 border-t border-gray-200 bg-white">
+    <div class="max-w-5xl mx-auto px-4 space-y-12 mb-12">
+        
+        <!-- Security Warning -->
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg">
+            <h3 class="font-bold text-red-700 text-lg mb-2 flex items-center">
+                <span class="mr-2">⚠️</span> IMPORTANT: Lab Security & Legal Compliance Warning
+            </h3>
+            <div class="text-sm space-y-2 text-gray-700">
+                <p>All lab exercises, especially those involving security, networking, or software analysis, must be conducted in a secure, isolated, and virtualized environment (e.g., a "sandbox").</p>
+                <p>You are solely responsible for your actions. Any attempt to apply these techniques or tools on public or private networks, systems, or applications that you do not explicitly own or have written permission to test is strictly forbidden, unethical, and illegal in most jurisdictions.</p>
+                <p>This course material is for educational purposes only. Cyber.SoHo disclaims all liability for any misuse, damage, or legal consequences resulting from your actions. Practice responsibly and legally.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 class="font-bold text-gray-900 mb-3">Legal Disclaimer</h3>
+                <p class="text-xs text-gray-600 leading-relaxed">
+                    The information provided in this course and its associated materials is for educational purposes only. It is not intended as professional advice. Cyber.SoHo provides no warranties, express or implied, and assumes no liability or responsibility for any errors or omissions in the content, or for any actions taken in reliance on the information contained herein.
+                </p>
+            </div>
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 class="font-bold text-gray-900 mb-3">Non-Affiliation & Editorial Disclaimer</h3>
+                <p class="text-xs text-gray-600 leading-relaxed">
+                    All product names, logos, brands, and trademarks featured or referred to within this course are the property of their respective trademark holders. These trademark holders are not affiliated with Cyber.SoHo, this course, or its materials. The use of these names and logos is for identification and educational purposes only and does not imply any endorsement or affiliation.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-900 text-gray-400 py-8 text-center text-sm">
+        <p class="mb-2">© 2025 Cyber.SoHo. All Rights Reserved.</p>
+        <p class="mb-4 max-w-2xl mx-auto px-4">
+            This educational framework and its contents are the intellectual property of Cyber.SoHo. Reproduction, modification, or commercial use of any part of this material without written permission is strictly prohibited.
+        </p>
+        <p class="mb-4">
+            Licensed under the <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" class="text-indigo-400 hover:text-indigo-300 hover:underline">Creative Commons Attribution–NonCommercial–NoDerivatives 4.0 International License</a>.
+        </p>
+        <p>For partnership or licensing inquiries, please contact: <a href="mailto:info.6gc0a@slmail.me" class="text-indigo-400 hover:text-indigo-300 hover:underline">info.6gc0a@slmail.me</a>.</p>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+  // --- Data Definitions ---
+  const curriculum = {
+    core: [
+      { title: "Mastering IT Lab Environments", file: "01. Mastering IT Lab Environments.html", desc: "VirtualBox, VMWare, GNS3, Containers." },
+      { title: "Networking Fundamentals", file: "02. Networking Fundamentals (Cisco IT Essentials).html", desc: "OSI, TCP/IP, Addressing, Routing." },
+      { title: "Excel & Data Modeling", file: "initial.html", desc: "Advanced spreadsheet techniques." },
+      { title: "ERP & Software Systems", file: "initial.html", desc: "Enterprise Resource Planning concepts." },
+      { title: "Data Visualization & Analytics", file: "initial.html", desc: "Turning data into insights." },
+      { title: "International Trade & Incoterms", file: "initial.html", desc: "Logistics and trade regulations." },
+      { title: "Fundamentals of Multimodal Transportation", file: "initial.html", desc: "Logistics transport modes." },
+      { title: "Warehouse Management & Storage", file: "initial.html", desc: "Inventory strategies and WMS." },
+      { title: "Blockchain and Crypto for Supply-Chain", file: null, desc: "Distributed ledger tech for logistics." },
+      { title: "Technical & Fundamental Analysis", file: null, desc: "Market analysis strategies." }
+    ],
+    cyber: [
+      { title: "Linux Firewalls - Iptables to Nftables", file: "00. Linux Firewalls - From Iptables to Nftables.html", desc: "Kernel-level packet filtering." },
+      { title: "Frameworks & Tools for Professionals", file: "01. Essential Frameworks and Tools for Cybersecurity Professionals.html", desc: "Kali, Wireshark, Nmap, Metasploit." },
+      { title: "Advanced Open-Source Firewalls", file: "02. Advanced Unix-like Open-Source Firewalls.html", desc: "pfSense, OPNsense, IPFire." },
+      { title: "Advanced Access Control", file: "03. Advanced Access Control - MAC, DAC, and Hardening.html", desc: "MAC, DAC, AppArmor, SELinux." },
+      { title: "SOC Tools of the Trade", file: "04. Security Operations Center (SOC) Tools of the Trade.html", desc: "EDR, SIEM, SOAR." },
+      { title: "The Sovereign Stack", file: "05. The Sovereign Stack - Anonymity, Hardening, and the Decentralized Web.html", desc: "Tor, Tails, Qubes, Privacy." }
+    ],
+    devops: [
+      { title: "DevOps Transition Scripting", file: "01. DevOps Transition Scripting and Infrastructure Languages.html", desc: "Bash, Python, YAML, JSON." },
+      { title: "Virtualize Everything", file: "02. Virtualize Everything with Open-Source.html", desc: "KVM, Proxmox, Podman." },
+      { title: "Multi-Cloud Architectures", file: "03. Multi-Cloud Architectures (AWS, Azure, GCP, Alibaba, OpenStack).html", desc: "AWS, Azure, GCP, OpenStack." },
+      { title: "Infrastructure as Code (IaC)", file: "04. Infrastructure as Code (IaC) Automation.html", desc: "Ansible, Terraform, Jenkins." },
+      { title: "Free Courses and Lab Options", file: "Online Labs and Free Courses (Cloud and IaC).html", desc: "Resource guide for free labs." }
+    ],
+    ai: [
+      { title: "Seven Steps to Self-Productivity", file: "01. The Seven Steps to Self-Productivity (Offline AI Toolset).html", desc: "Offline AI, Ollama, RAG." }
+    ],
+    soft: [
+      { title: "The Human Firewall", file: "01. The Human Firewall - Securing IT Jobs in the Age of AI.html", desc: "Securing IT Jobs in the Age of AI." },
+      { title: "The Human Singularity", file: "02. The Human Singularity - From Silicon Logic to Social Disruption.html", desc: "Silicon Logic to Social Disruption." },
+      { title: "The Human Renaissance", file: "03. The Human Renaissance - Sovereignty in the Age of Algorithms.html", desc: "Sovereignty in the Age of Algorithms." }
+    ]
+  };
+
+  // --- Rendering Logic ---
+
+  function renderGrid(data, elementId, colorClass) {
+    const container = document.getElementById(elementId);
+    if(!container) return;
+
+    container.innerHTML = data.map(item => {
+      const isAvailable = item.file !== null;
+      // If available, clicking opens the file. If not, click does nothing.
+      const onclick = isAvailable ? `window.open('${item.file}', '_blank')` : '';
+      const stateClass = isAvailable ? '' : 'disabled';
+      const badge = isAvailable 
+        ? `<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">Available</span>`
+        : `<span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">Coming Soon</span>`;
+      const linkIcon = isAvailable ? `<span class="text-gray-400 group-hover:text-indigo-600 transition-colors">↗</span>` : '';
+
+      return `
+        <div class="course-card relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${colorClass} ${stateClass}" onclick="${onclick}">
+          <div class="flex justify-between items-start mb-4">
+            ${badge}
+            ${linkIcon}
+          </div>
+          <div>
+            <h3 class="font-bold text-lg text-gray-900 mb-2 leading-tight">${item.title}</h3>
+            <p class="text-sm text-gray-500">${item.desc}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderChart() {
+    const ctx = document.getElementById('courseChart');
+    if(!ctx) return;
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Core IT & Logistics', 'Cybersecurity', 'DevOps & Cloud', 'AI', 'Soft Skills'],
+        datasets: [{
+          label: 'Number of Courses',
+          data: [
+            curriculum.core.length,
+            curriculum.cyber.length,
+            curriculum.devops.length,
+            curriculum.ai.length,
+            curriculum.soft.length
+          ],
+          backgroundColor: [
+            'rgba(99, 102, 241, 0.7)', // Indigo
+            'rgba(239, 68, 68, 0.7)',  // Red
+            'rgba(59, 130, 246, 0.7)', // Blue
+            'rgba(168, 85, 247, 0.7)', // Purple
+            'rgba(245, 158, 11, 0.7)'  // Amber
+          ],
+          borderColor: [
+            'rgb(99, 102, 241)',
+            'rgb(239, 68, 68)',
+            'rgb(59, 130, 246)',
+            'rgb(168, 85, 247)',
+            'rgb(245, 158, 11)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (ctx) => `${ctx.raw} Courses` }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { display: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function buildPathDiagram() {
+    const container = document.getElementById('path-diagram-container');
+    if(!container) return;
+
+    let html = '<ul class="tree"><li><span>Cyber.SoHo Curriculum</span><ul>';
+
+    // Helper to generate list items
+    const generateNodes = (title, items) => {
+        let nodeHtml = `<li><span class="toggleable collapsed node-label">${title}</span><ul class="collapsed">`;
+        items.forEach(course => {
+            const link = course.file ? `<a href="${course.file}" target="_blank">${course.title}</a>` : `<span class="node-label" style="opacity:0.6; cursor:not-allowed">${course.title} (Soon)</span>`;
+            nodeHtml += `<li>${link}</li>`;
+        });
+        nodeHtml += '</ul></li>';
+        return nodeHtml;
+    };
+
+    html += generateNodes("Core IT & Logistics", curriculum.core);
+    html += generateNodes("Cybersecurity", curriculum.cyber);
+    html += generateNodes("DevOps & Cloud", curriculum.devops);
+    html += generateNodes("Artificial Intelligence", curriculum.ai);
+    html += generateNodes("Soft Skills & Future Tech", curriculum.soft);
+
+    html += '</ul></li></ul>';
+    container.innerHTML = html;
+
+    // Toggle Logic
+    container.addEventListener('click', function(event) {
+        if (event.target.classList.contains('toggleable')) {
+            event.target.classList.toggle('collapsed');
+            const nextUl = event.target.nextElementSibling;
+            if (nextUl && nextUl.tagName === 'UL') {
+                nextUl.classList.toggle('collapsed');
+            }
+        }
+    });
+  }
+
+  function scrollToSection(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // --- Init ---
+  window.addEventListener('load', () => {
+    renderGrid(curriculum.core, 'core-grid', 'border-indigo-200 hover:border-indigo-400');
+    renderGrid(curriculum.cyber, 'cyber-grid', 'border-red-200 hover:border-red-400');
+    renderGrid(curriculum.devops, 'devops-grid', 'border-blue-200 hover:border-blue-400');
+    renderGrid(curriculum.ai, 'ai-grid', 'border-purple-200 hover:border-purple-400');
+    renderGrid(curriculum.soft, 'soft-grid', 'border-amber-200 hover:border-amber-400');
+    
+    renderChart();
+    buildPathDiagram();
+  });
+
+</script>
+</body>
+</html>

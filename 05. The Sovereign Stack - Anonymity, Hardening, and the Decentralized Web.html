@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sovereign Stack: Anonymity, Hardening, and the Decentralized Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Glitch Effect for Title (Cyberpunk vibe) */
+        .glitch {
+            position: relative;
+            color: #d1d5db;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 #ef4444;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px;
+            text-shadow: -1px 0 #3b82f6;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(32px, 9999px, 2px, 0); }
+            100% { clip: rect(88px, 9999px, 83px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); }
+            100% { clip: rect(4px, 9999px, 23px, 0); }
+        }
+
+        /* Matrix Rain Animation Container */
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+            pointer-events: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: "Anonymous Grey & Neon".
+         Background: Gray-900 (Dark, serious).
+         Primary: Emerald-500 (Secure/Encrypted).
+         Secondary: Purple-500 (Tor/Onion).
+         Accents: Red-500 (Hardening/Warnings).
+         Text: Gray-300 (Subtle readability).
+    -->
+    
+    <!-- Application Structure Plan:
+         1. "The Sovereign Dashboard": Overview of the course philosophy (Privacy != Crime), 30h duration, and methodology.
+         2. "The Privacy Stack" (Interactive Layering): A visual stack of technologies (Network -> OS -> App -> Identity). Clicking a layer reveals tools (Tor, Whonix, PGP).
+         3. "Lab Environment Builder": A tool to select hardware specs (RAM/CPU) and get a recommended lab setup (VirtualBox vs Live USB vs Qubes). Addresses the "HW needed" requirement.
+         4. "Trace Minimizer": A simulation of a web request. Users toggle "VPN", "Tor", "JS Disabled" to see how their digital fingerprint changes.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology Chart: Doughnut chart (30/70 split).
+         - Stack Layers: Vertical accordion or clickable isometric stack to represent the "Defense in Depth" approach.
+         - Lab Configurator: Simple logic-based recommendation engine.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-gray-900 text-gray-300 font-mono antialiased selection:bg-purple-900 selection:text-white">
+
+    <canvas id="matrix-bg"></canvas>
+
+    <!-- Navigation -->
+    <nav class="bg-gray-950 border-b border-gray-800 sticky top-0 z-50 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">👁️‍🗨️</span>
+                    <div>
+                        <h1 class="font-bold text-xl text-gray-100 tracking-tight glitch" data-text="SOVEREIGN STACK">SOVEREIGN STACK</h1>
+                        <p class="text-[10px] text-gray-500 font-mono hidden sm:block">ANONYMITY • HARDENING • DECENTRALIZATION</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded text-xs font-bold text-emerald-400 bg-gray-900 border border-emerald-900 hover:bg-gray-800 transition-all whitespace-nowrap">STATUS</button>
+                    <button onclick="app.navigate('stack')" id="nav-stack" class="px-3 py-2 rounded text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap">LAYERS</button>
+                    <button onclick="app.navigate('lab')" id="nav-lab" class="px-3 py-2 rounded text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap">LAB SETUP</button>
+                    <button onclick="app.navigate('sim')" id="nav-sim" class="px-3 py-2 rounded text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap">TRACE_TEST</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-950 text-gray-600 py-8 mt-12 border-t border-gray-900">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm">Course: The Sovereign Stack</p>
+            <p class="text-xs mt-2 opacity-60">30 Hours • Non-Credited • Emplois-Québec Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "The Sovereign Stack",
+                duration: "30 Hours",
+                audience: ["Privacy Advocates", "Journalists", "Cybersecurity Students"],
+                methodology: { theory: 30, lab: 70 }
+            },
+            layers: [
+                {
+                    id: "network",
+                    title: "Network Layer",
+                    icon: "🌐",
+                    desc: "Anonymizing the connection. Hiding the 'Where'.",
+                    tools: [
+                        { name: "Tor Browser", desc: "Onion routing, fingerprinting protection, entry/guard/exit nodes." },
+                        { name: "VPN Chains", desc: "Multi-hop configurations for jurisdictional security." },
+                        { name: "Proxies", desc: "SOCKS5/HTTP proxies for lightweight masking." }
+                    ],
+                    color: "border-purple-600"
+                },
+                {
+                    id: "os",
+                    title: "Operating System",
+                    icon: "💻",
+                    desc: "The foundation of trust. Compartmentalization and amnesia.",
+                    tools: [
+                        { name: "Tails OS", desc: "The Amnesic Incognito Live System. Forensic-proof, leaves no trace on hardware." },
+                        { name: "Qubes OS", desc: "Security by isolation. Dom0 vs AppVMs. Opening untrusted files safely." },
+                        { name: "Whonix", desc: "Split-VM architecture (Gateway/Workstation) to prevent IP leaks." },
+                        { name: "Hardening", desc: "Debloating Windows telemetry, Linux kernel tuning." }
+                    ],
+                    color: "border-emerald-600"
+                },
+                {
+                    id: "identity",
+                    title: "Identity & Data",
+                    icon: "🔑",
+                    desc: "Encryption, sovereignty, and decentralized storage.",
+                    tools: [
+                        { name: "PKI / GPG", desc: "Asymmetric encryption, signing, and personal Certificate Authorities." },
+                        { name: "Crypto/Blockchain", desc: "Self-custody wallets, avoiding centralized exchanges, ledger analysis." },
+                        { name: "2DWeb / IPFS", desc: "Decentralized, censorship-resistant content hosting." },
+                        { name: "Golem", desc: "Decentralized distributed computing power." }
+                    ],
+                    color: "border-blue-600"
+                }
+            ],
+            labConfigs: {
+                low: {
+                    title: "Online Browser Lab",
+                    desc: "For low-spec hardware or Chromebooks. Limited depth but covers concepts.",
+                    tools: "TryHackMe (Tor Room), HackTheBox (Linux Hardening)",
+                    specs: "Any Browser, 4GB RAM"
+                },
+                med: {
+                    title: "The Virtual Lab (Recommended)",
+                    desc: "Standard student setup. Runs Whonix or Tails in a VM.",
+                    tools: "VirtualBox, Whonix Gateway/Workstation",
+                    specs: "16GB RAM, 4 Cores, 60GB SSD"
+                },
+                high: {
+                    title: "Bare Metal Sovereign",
+                    desc: "Full Qubes OS installation. The ultimate isolation lab.",
+                    tools: "Qubes OS (ISO), USB install media",
+                    specs: "32GB RAM, i7/Ryzen 7 (VT-x/IOMMU), Dedicated SSD"
+                }
+            }
+        };
+
+        const app = {
+            view: 'dashboard',
+
+            init() {
+                this.initMatrix();
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'stack': this.renderStack(wrapper); break;
+                    case 'lab': this.renderLab(wrapper); break;
+                    case 'sim': this.renderSim(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'stack', 'lab', 'sim'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded text-xs font-bold text-emerald-400 bg-gray-900 border border-emerald-900 shadow-[0_0_15px_rgba(16,185,129,0.2)] whitespace-nowrap transition-all";
+                    } else {
+                        btn.className = "px-3 py-2 rounded text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                container.innerHTML = `
+                    <div class="mb-10 border-b border-gray-800 pb-8">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                            <div>
+                                <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">Operational Security (OPSEC)</h2>
+                                <p class="text-gray-400 max-w-2xl leading-relaxed">
+                                    Security analysts must investigate threats without becoming victims. 
+                                    This course teaches the tools necessary to <span class="text-emerald-400">hide traces</span>, 
+                                    <span class="text-purple-400">isolate malware</span>, and conduct secure research.
+                                </p>
+                            </div>
+                            <div class="text-right hidden md:block">
+                                <div class="text-xs text-gray-500 uppercase tracking-widest">Format</div>
+                                <div class="text-xl text-white font-mono">30 Hours / Workshop</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Strategic Justification
+                const justifyCard = document.createElement('div');
+                justifyCard.className = "lg:col-span-2 bg-gray-900 border border-gray-800 p-6 rounded-lg relative overflow-hidden";
+                justifyCard.innerHTML = `
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-bl-full"></div>
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                        <span class="w-1 h-6 bg-red-500 mr-3"></span> Strategic Justification
+                    </h3>
+                    <ul class="space-y-4 text-sm text-gray-300">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">⚠</span>
+                            <span><strong>Secure Research:</strong> Analysts must interact with live malware/C2 servers. Without isolation (Qubes/Whonix), this exposes the organization.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">⚠</span>
+                            <span><strong>Trace Minimization:</strong> Red Team/Blue Team investigations must not reveal the investigator's location or IP to threat actors.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-emerald-500 mr-2">✓</span>
+                            <span><strong>Privacy by Design:</strong> Compliance with Law 25/GDPR requires deep knowledge of data minimization.</span>
+                        </li>
+                    </ul>
+                `;
+
+                // Chart
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-gray-900 border border-gray-800 p-6 rounded-lg flex flex-col items-center justify-center";
+                chartCard.innerHTML = `
+                    <h3 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-widest">Course Methodology</h3>
+                    <div class="chart-container">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                grid.appendChild(justifyCard);
+                grid.appendChild(chartCard);
+                container.appendChild(grid);
+
+                setTimeout(() => {
+                    new Chart(document.getElementById('methodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory (Privacy Models)', 'Practical Labs (OS/Tools)'],
+                            datasets: [{
+                                data: [30, 70],
+                                backgroundColor: ['#1f2937', '#10b981'],
+                                borderColor: '#111827',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#9ca3af', font: { family: 'monospace' } } }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderStack(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">The Sovereign Stack Layers</h2>
+                        <p class="text-gray-400 mt-2">A defense-in-depth approach to digital sovereignty.</p>
+                    </div>
+                `;
+
+                const stackContainer = document.createElement('div');
+                stackContainer.className = "flex flex-col gap-4 max-w-4xl mx-auto";
+
+                courseData.layers.forEach(layer => {
+                    const el = document.createElement('div');
+                    el.className = `group bg-gray-900 border-l-4 ${layer.color} p-6 rounded-r-lg hover:bg-gray-800 transition-all cursor-pointer relative overflow-hidden`;
+                    
+                    el.onclick = (e) => {
+                        const content = el.querySelector('.layer-content');
+                        content.classList.toggle('hidden');
+                    };
+
+                    el.innerHTML = `
+                        <div class="flex items-center justify-between relative z-10">
+                            <div class="flex items-center gap-4">
+                                <div class="text-3xl grayscale group-hover:grayscale-0 transition-all">${layer.icon}</div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">${layer.title}</h3>
+                                    <p class="text-sm text-gray-500">${layer.desc}</p>
+                                </div>
+                            </div>
+                            <div class="text-gray-600 group-hover:text-white transition-colors">▼</div>
+                        </div>
+                        <div class="layer-content hidden mt-6 pt-6 border-t border-gray-700/50 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
+                            ${layer.tools.map(t => `
+                                <div class="bg-gray-950 p-3 rounded border border-gray-800">
+                                    <h4 class="text-sm font-bold text-gray-200">${t.name}</h4>
+                                    <p class="text-xs text-gray-500 mt-1">${t.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    stackContainer.appendChild(el);
+                });
+
+                container.appendChild(stackContainer);
+            },
+
+            renderLab(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Lab Environment Builder</h2>
+                        <p class="text-gray-400 mt-2">Determine the required hardware and software configuration based on available resources.</p>
+                    </div>
+                `;
+
+                const builder = document.createElement('div');
+                builder.className = "grid grid-cols-1 lg:grid-cols-2 gap-8";
+
+                // Inputs
+                const controls = document.createElement('div');
+                controls.className = "bg-gray-900 p-6 rounded-lg border border-gray-800 h-fit";
+                controls.innerHTML = `
+                    <h3 class="text-lg font-bold text-white mb-4">Resource Assessment</h3>
+                    
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Available RAM</label>
+                        <select id="ram-select" class="w-full bg-gray-950 text-gray-300 border border-gray-700 rounded p-2 focus:border-emerald-500 focus:outline-none">
+                            <option value="4">4GB - 8GB (Low)</option>
+                            <option value="16">16GB - 24GB (Medium)</option>
+                            <option value="32">32GB+ (High)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Processor Virtualization</label>
+                        <select id="cpu-select" class="w-full bg-gray-950 text-gray-300 border border-gray-700 rounded p-2 focus:border-emerald-500 focus:outline-none">
+                            <option value="no">Not Enabled / Unknown</option>
+                            <option value="yes">VT-x / AMD-V Enabled</option>
+                        </select>
+                    </div>
+
+                    <button onclick="app.calcLab()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition-colors shadow-lg shadow-emerald-900/50">
+                        GENERATE CONFIGURATION
+                    </button>
+                `;
+
+                // Output
+                const output = document.createElement('div');
+                output.id = "lab-output";
+                output.className = "bg-gray-950 p-8 rounded-lg border border-gray-800 flex items-center justify-center text-gray-600 text-center";
+                output.innerHTML = "Select resources to generate a lab path.";
+
+                builder.appendChild(controls);
+                builder.appendChild(output);
+                container.appendChild(builder);
+            },
+
+            calcLab() {
+                const ram = parseInt(document.getElementById('ram-select').value);
+                const cpu = document.getElementById('cpu-select').value;
+                const out = document.getElementById('lab-output');
+                
+                let config = courseData.labConfigs.low;
+                let color = "border-gray-600";
+
+                if (ram >= 32 && cpu === 'yes') {
+                    config = courseData.labConfigs.high;
+                    color = "border-emerald-500";
+                } else if (ram >= 16 && cpu === 'yes') {
+                    config = courseData.labConfigs.med;
+                    color = "border-blue-500";
+                }
+
+                out.innerHTML = `
+                    <div class="text-left w-full fade-in">
+                        <div class="text-xs uppercase font-bold text-gray-500 mb-2">Recommended Path</div>
+                        <h3 class="text-2xl font-bold text-white mb-4">${config.title}</h3>
+                        
+                        <div class="bg-gray-900 p-4 rounded border-l-4 ${color} mb-4">
+                            <p class="text-gray-300 text-sm leading-relaxed">${config.desc}</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <span class="text-xs text-gray-500 block">Software Stack</span>
+                                <span class="text-sm text-emerald-400 font-mono">${config.tools}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 block">HW Requirements</span>
+                                <span class="text-sm text-gray-300 font-mono">${config.specs}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-800 text-xs text-gray-500">
+                            * Note: All recommended software tools are open-source and free.
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderSim(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white">Trace Minimizer Simulation</h2>
+                        <p class="text-gray-400 mt-2">See how hardening tools affect your digital fingerprint.</p>
+                    </div>
+                `;
+
+                const sim = document.createElement('div');
+                sim.className = "grid grid-cols-1 lg:grid-cols-2 gap-8";
+
+                sim.innerHTML = `
+                    <!-- Controls -->
+                    <div class="space-y-4">
+                        <div class="bg-gray-900 p-4 rounded border border-gray-700 flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-white">Tor Network</div>
+                                <div class="text-xs text-gray-500">Route traffic through 3 nodes</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-tor" class="sr-only peer" onchange="app.updateSim()">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="bg-gray-900 p-4 rounded border border-gray-700 flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-white">JavaScript Disabled</div>
+                                <div class="text-xs text-gray-500">Block fingerprinters & trackers</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-js" class="sr-only peer" onchange="app.updateSim()">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="bg-gray-900 p-4 rounded border border-gray-700 flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-white">User-Agent Spoofing</div>
+                                <div class="text-xs text-gray-500">Generic OS signature</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-ua" class="sr-only peer" onchange="app.updateSim()">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Output -->
+                    <div class="bg-black p-6 rounded-lg border border-gray-800 font-mono text-sm relative overflow-hidden">
+                        <div class="absolute top-2 right-2 text-xs text-gray-600">Fingerprint_Scanner_v2.0</div>
+                        <div id="sim-results" class="space-y-4 mt-4">
+                            <!-- Populated JS -->
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(sim);
+                setTimeout(() => app.updateSim(), 0);
+            },
+
+            updateSim() {
+                const tor = document.getElementById('toggle-tor').checked;
+                const js = document.getElementById('toggle-js').checked;
+                const ua = document.getElementById('toggle-ua').checked;
+                const res = document.getElementById('sim-results');
+
+                let ip = tor ? "<span class='text-purple-400'>185.220.101.45 (Tor Exit Node)</span>" : "<span class='text-red-500'>192.168.1.55 (Real IP Exposed)</span>";
+                let loc = tor ? "Iceland" : "Montreal, QC (Exact Location)";
+                let script = js ? "<span class='text-emerald-400'>Blocked</span>" : "<span class='text-red-500'>Running (Canvas Fingerprint Active)</span>";
+                let os = ua ? "<span class='text-blue-400'>Windows 10 (Generic)</span>" : "<span class='text-yellow-500'>Linux x86_64 (Unique)</span>";
+                
+                let score = 0;
+                if(tor) score += 40;
+                if(js) score += 30;
+                if(ua) score += 30;
+
+                let scoreColor = score > 80 ? "text-emerald-500" : (score > 40 ? "text-yellow-500" : "text-red-500");
+
+                res.innerHTML = `
+                    <div>
+                        <span class="text-gray-500 block">IP Address:</span>
+                        ${ip}
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block">Geo-Location:</span>
+                        <span class="text-gray-300">${loc}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block">Scripts / Trackers:</span>
+                        ${script}
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block">OS Fingerprint:</span>
+                        ${os}
+                    </div>
+                    <div class="pt-4 border-t border-gray-800">
+                        <span class="text-gray-500">Anonymity Score:</span>
+                        <span class="text-xl font-bold ${scoreColor}">${score}%</span>
+                    </div>
+                `;
+            },
+
+            initMatrix() {
+                const canvas = document.getElementById('matrix-bg');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                window.addEventListener('resize', resize);
+                resize();
+
+                const chars = "0101010101XYZ";
+                const fontSize = 14;
+                const columns = canvas.width / fontSize;
+                const drops = [];
+
+                for(let x = 0; x < columns; x++) drops[x] = 1;
+
+                function draw() {
+                    ctx.fillStyle = "rgba(17, 24, 39, 0.05)"; // Fade effect
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.fillStyle = "#10b981"; // Emerald text
+                    ctx.font = fontSize + "px monospace";
+
+                    for(let i = 0; i < drops.length; i++) {
+                        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                        if(drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+                            drops[i] = 0;
+                        drops[i]++;
+                    }
+                }
+                setInterval(draw, 50);
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>

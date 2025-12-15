@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure as Code (IaC) Automation - Course Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-active {
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+
+        /* Pipeline Connector Lines */
+        .pipe-connector {
+            position: relative;
+        }
+        .pipe-connector::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -2rem;
+            width: 2rem;
+            height: 2px;
+            background-color: #cbd5e1;
+            z-index: 0;
+        }
+        .pipe-connector:last-child::after {
+            display: none;
+        }
+        @media (max-width: 1024px) {
+            .pipe-connector::after {
+                display: none;
+            }
+        }
+    </style>
+    <!-- Chosen Palette: "Engineering Blueprint". 
+         Background: Slate-50 (Neutral foundation).
+         Primary: Slate-900 (Structure/Terminal).
+         Tool Colors: 
+            - Ansible: Red-600
+            - Terraform: Purple-600
+            - Jenkins: Sky-600
+         This palette visually distinguishes the three main tools while keeping a clean, professional look.
+    -->
+    
+    <!-- Application Structure Plan:
+         1. Dashboard (The Blueprint): Overview of the 30-hour course, methodology stats, and target audience.
+         2. Curriculum (The Plan): Interactive breakdown of the 4 modules. User clicks to expand details.
+         3. Tool Stack (The Toolkit): A comparison/deep-dive view of Ansible, Terraform, and Jenkins, explaining "Configuration" vs "Provisioning" vs "Automation".
+         4. Pipeline Simulator (The Build): An interactive visualization of the Capstone project. Users "Push Code" and watch the pipeline stages activate (Terraform -> Ansible -> Jenkins status).
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology Chart: Doughnut chart for 30/70 split.
+         - Hours Bar Chart: Visualizing the time allocation per module.
+         - Simulator: CSS-based animation sequences to represent a CI/CD pipeline execution, making the abstract "Capstone" concrete.
+         - Tech Cards: Grid layout to clearly separate the three pillars of IaC.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🏗️</span>
+                    <div>
+                        <h1 class="font-bold text-xl text-slate-900 tracking-tight">IaC<span class="text-indigo-600">.Automate</span></h1>
+                        <p class="text-[10px] text-slate-500 font-mono hidden sm:block">INFRASTRUCTURE AS CODE</p>
+                    </div>
+                </div>
+                <div class="flex space-x-1 sm:space-x-4 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 transition-colors whitespace-nowrap">Dashboard</button>
+                    <button onclick="app.navigate('curriculum')" id="nav-curriculum" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Curriculum</button>
+                    <button onclick="app.navigate('stack')" id="nav-stack" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">The Stack</button>
+                    <button onclick="app.navigate('pipeline')" id="nav-pipeline" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Pipeline Sim</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium text-slate-300">Infrastructure as Code (IaC) Automation</p>
+            <p class="text-xs mt-2 opacity-60">30 Hours • Non-Credited • Emplois-Québec Approved Format</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "Infrastructure as Code (IaC) Automation",
+                duration: "30 Hours",
+                audience: ["System Administrators", "Developers", "DevOps Engineers"],
+                methodology: { theory: 30, lab: 70 }
+            },
+            modules: [
+                {
+                    id: 1,
+                    title: "Configure with Ansible",
+                    hours: 8,
+                    focus: "Configuration Management",
+                    icon: "🔴",
+                    color: "border-red-500",
+                    bg: "bg-red-50",
+                    topics: [
+                        { title: "Architecture", items: ["Agentless (SSH/WinRM)", "Inventory Management"] },
+                        { title: "Playbooks", items: ["YAML Syntax", "Core Modules (apt, service, user)"] },
+                        { title: "Scalability", items: ["Roles Structure", "Ansible Vault Security"] }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Create with Terraform",
+                    hours: 8,
+                    focus: "Infrastructure Provisioning",
+                    icon: "🟣",
+                    color: "border-purple-500",
+                    bg: "bg-purple-50",
+                    topics: [
+                        { title: "Fundamentals", items: ["Providers (AWS/Azure)", "HCL Syntax"] },
+                        { title: "Workflow", items: ["Init, Plan, Apply, Destroy", "State Management"] },
+                        { title: "Modularity", items: ["Input/Output Variables", "Reusable Modules"] }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Automate with Jenkins",
+                    hours: 8,
+                    focus: "CI/CD Automation",
+                    icon: "🔵",
+                    color: "border-sky-500",
+                    bg: "bg-sky-50",
+                    topics: [
+                        { title: "Administration", items: ["Plugins", "Master-Agent Architecture"] },
+                        { title: "Pipeline as Code", items: ["Jenkinsfile", "Declarative Pipelines"] },
+                        { title: "Triggers", items: ["Webhooks (Git Integration)", "Secret Management"] }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Capstone Integration",
+                    hours: 6,
+                    focus: "DevOps Pipeline",
+                    icon: "🏁",
+                    color: "border-slate-500",
+                    bg: "bg-slate-100",
+                    topics: [
+                        { title: "The Pipeline", items: ["Checkout (Git)", "Provision (Terraform)", "Configure (Ansible)"] },
+                        { title: "Troubleshooting", items: ["Dependency Management", "Pipeline Failures"] }
+                    ]
+                }
+            ],
+            tools: {
+                ansible: { name: "Ansible", type: "Config Mgmt", desc: "Change the state of existing servers (install apache, update users). Agentless." },
+                terraform: { name: "Terraform", type: "Provisioning", desc: "Create the servers and networks themselves (AWS EC2, Azure VNet). Immutable." },
+                jenkins: { name: "Jenkins", type: "Orchestration", desc: "The conductor that triggers Terraform and Ansible based on code changes." }
+            }
+        };
+
+        const app = {
+            view: 'dashboard',
+
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'curriculum': this.renderCurriculum(wrapper); break;
+                    case 'stack': this.renderStack(wrapper); break;
+                    case 'pipeline': this.renderPipeline(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'curriculum', 'stack', 'pipeline'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 transition-colors whitespace-nowrap shadow-sm";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                container.innerHTML = `
+                    <div class="mb-10 text-center">
+                        <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Automate Everything</h2>
+                        <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                            A 30-hour intensive workshop covering the three pillars of modern Infrastructure as Code: 
+                            Provisioning, Configuration, and Orchestration.
+                        </p>
+                    </div>
+                `;
+
+                // Stats Grid
+                const statsGrid = document.createElement('div');
+                statsGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10";
+                
+                const stats = [
+                    { label: "Total Duration", val: "30 Hours", icon: "⏱️" },
+                    { label: "Tools", val: "Ansible, TF, Jenkins", icon: "🛠️" },
+                    { label: "Format", val: "Non-Credited", icon: "🎓" },
+                    { label: "Lab Focus", val: "70% Practical", icon: "⌨️" }
+                ];
+
+                stats.forEach(s => {
+                    statsGrid.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
+                            <span class="text-3xl bg-slate-50 p-3 rounded-lg">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-2xl font-bold text-slate-800">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(statsGrid);
+
+                // Content Split
+                const layout = document.createElement('div');
+                layout.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Audience & Info
+                const infoCard = document.createElement('div');
+                infoCard.className = "lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-8";
+                infoCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
+                        <span class="bg-indigo-100 text-indigo-600 p-1 rounded mr-3 text-sm">🎯</span> Competencies & Objectives
+                    </h3>
+                    <div class="space-y-4">
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Write Ansible Playbooks for server config.
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Provision Cloud Infrastructure with Terraform.
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Design Jenkins Pipelines for CI/CD.
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-3 rounded border border-slate-100">
+                                <span class="text-green-500 mr-2">✓</span> Manage State and Drift programmatically.
+                            </li>
+                        </ul>
+                    </div>
+                `;
+
+                // Chart
+                const chartCard = document.createElement('div');
+                chartCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col";
+                chartCard.innerHTML = `
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Teaching Methodology</h3>
+                    <p class="text-sm text-slate-500 mb-4">Hands-on code from Day 1.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                layout.appendChild(infoCard);
+                layout.appendChild(chartCard);
+                container.appendChild(layout);
+
+                // Render Chart
+                setTimeout(() => {
+                    new Chart(document.getElementById('methodChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Theory', 'Practical Labs'],
+                            datasets: [{
+                                data: [30, 70],
+                                backgroundColor: ['#cbd5e1', '#6366f1'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                }, 100);
+            },
+
+            renderCurriculum(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">Curriculum Roadmap</h2>
+                        <p class="text-slate-600 mt-2">A modular approach to mastering the IaC ecosystem.</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
+
+                courseData.modules.forEach(mod => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white border-l-4 ${mod.color} rounded-r-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer group flex flex-col`;
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-4xl p-2 bg-slate-50 rounded-lg">${mod.icon}</div>
+                            <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">${mod.hours} Hours</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-1">${mod.title}</h3>
+                        <p class="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-4">${mod.focus}</p>
+                        
+                        <div class="space-y-3 mt-auto">
+                            ${mod.topics.map(t => `
+                                <div>
+                                    <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 border-b border-slate-100 pb-1">${t.title}</h4>
+                                    <ul class="text-sm text-slate-700">
+                                        ${t.items.map(i => `<li class="flex items-center"><span class="w-1 h-1 bg-slate-400 rounded-full mr-2"></span>${i}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+            },
+
+            renderStack(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">The IaC Triad</h2>
+                        <p class="text-slate-600 mt-2">Understanding where each tool fits in the DevOps puzzle.</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 lg:grid-cols-3 gap-6";
+
+                // Tool 1: Terraform
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-lg border-t-8 border-purple-500 p-6">
+                        <div class="text-4xl mb-4">🟣</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Terraform</h3>
+                        <p class="text-sm font-mono text-purple-600 mb-4">PROVISIONING</p>
+                        <p class="text-slate-600 mb-6 min-h-[60px]">Builds the house. Creates servers, networks, and load balancers from scratch.</p>
+                        <div class="bg-slate-900 text-purple-300 p-3 rounded font-mono text-xs">
+                            resource "aws_instance" "web" {<br>
+                            &nbsp;&nbsp;ami = "ami-123"<br>
+                            }
+                        </div>
+                    </div>
+                `;
+
+                // Tool 2: Ansible
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-lg border-t-8 border-red-500 p-6">
+                        <div class="text-4xl mb-4">🔴</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Ansible</h3>
+                        <p class="text-sm font-mono text-red-600 mb-4">CONFIGURATION</p>
+                        <p class="text-slate-600 mb-6 min-h-[60px]">Furnishes the house. Installs software, updates configs, and manages users.</p>
+                        <div class="bg-slate-900 text-red-300 p-3 rounded font-mono text-xs">
+                            - name: Install Nginx<br>
+                            &nbsp;&nbsp;apt: name=nginx state=present
+                        </div>
+                    </div>
+                `;
+
+                // Tool 3: Jenkins
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-lg border-t-8 border-sky-500 p-6">
+                        <div class="text-4xl mb-4">🔵</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Jenkins</h3>
+                        <p class="text-sm font-mono text-sky-600 mb-4">AUTOMATION</p>
+                        <p class="text-slate-600 mb-6 min-h-[60px]">The construction manager. Triggers Terraform and Ansible when plans change.</p>
+                        <div class="bg-slate-900 text-sky-300 p-3 rounded font-mono text-xs">
+                            pipeline {<br>
+                            &nbsp;&nbsp;stage('Deploy') { ... }<br>
+                            }
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(grid);
+            },
+
+            renderPipeline(container) {
+                container.innerHTML = `
+                    <div class="mb-8 text-center">
+                        <h2 class="text-3xl font-bold text-slate-900">Capstone Simulator</h2>
+                        <p class="text-slate-600 mt-2">
+                            Visualize the final project: A unified pipeline triggered by code.
+                        </p>
+                    </div>
+                `;
+
+                // Pipeline Visualization Area
+                const simArea = document.createElement('div');
+                simArea.className = "bg-slate-900 rounded-xl p-8 shadow-2xl border border-slate-700 max-w-5xl mx-auto overflow-hidden";
+                
+                simArea.innerHTML = `
+                    <div class="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8">
+                        
+                        <!-- Stage 1: Git -->
+                        <div id="stage-git" class="pipe-connector w-full lg:w-1/4 bg-slate-800 p-4 rounded-lg border-2 border-slate-700 text-center opacity-50 transition-all duration-500">
+                            <div class="text-3xl mb-2">💾</div>
+                            <h4 class="text-slate-200 font-bold">Checkout</h4>
+                            <p class="text-xs text-slate-500">Git</p>
+                        </div>
+
+                        <!-- Stage 2: Terraform -->
+                        <div id="stage-tf" class="pipe-connector w-full lg:w-1/4 bg-slate-800 p-4 rounded-lg border-2 border-slate-700 text-center opacity-50 transition-all duration-500">
+                            <div class="text-3xl mb-2">🏗️</div>
+                            <h4 class="text-slate-200 font-bold">Provision</h4>
+                            <p class="text-xs text-slate-500">Terraform</p>
+                        </div>
+
+                        <!-- Stage 3: Ansible -->
+                        <div id="stage-ans" class="pipe-connector w-full lg:w-1/4 bg-slate-800 p-4 rounded-lg border-2 border-slate-700 text-center opacity-50 transition-all duration-500">
+                            <div class="text-3xl mb-2">⚙️</div>
+                            <h4 class="text-slate-200 font-bold">Configure</h4>
+                            <p class="text-xs text-slate-500">Ansible</p>
+                        </div>
+
+                        <!-- Stage 4: Verify -->
+                        <div id="stage-ver" class="w-full lg:w-1/4 bg-slate-800 p-4 rounded-lg border-2 border-slate-700 text-center opacity-50 transition-all duration-500">
+                            <div class="text-3xl mb-2">✅</div>
+                            <h4 class="text-slate-200 font-bold">Complete</h4>
+                            <p class="text-xs text-slate-500">Success</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Console Output -->
+                    <div class="bg-black rounded border border-slate-700 p-4 font-mono text-xs h-40 overflow-y-auto" id="sim-console">
+                        <div class="text-slate-500"># Jenkins Agent Ready... Waiting for trigger.</div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="mt-6 flex justify-center">
+                        <button onclick="app.runPipeline()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform active:scale-95 flex items-center gap-2">
+                            <span>🚀</span> Push Code to Main
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(simArea);
+            },
+
+            runPipeline() {
+                const consoleDiv = document.getElementById('sim-console');
+                const stages = ['stage-git', 'stage-tf', 'stage-ans', 'stage-ver'];
+                
+                // Reset UI
+                stages.forEach(id => {
+                    const el = document.getElementById(id);
+                    el.classList.remove('opacity-100', 'border-indigo-500', 'bg-slate-700', 'pulse-active');
+                    el.classList.add('opacity-50', 'bg-slate-800');
+                });
+                consoleDiv.innerHTML = '<div class="text-slate-500"># Pipeline triggered by user...</div>';
+
+                // Helper for logs
+                const log = (msg, color = 'text-slate-300') => {
+                    const div = document.createElement('div');
+                    div.className = `${color} mt-1`;
+                    div.innerText = `> ${msg}`;
+                    consoleDiv.appendChild(div);
+                    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+                };
+
+                // Sequence
+                let delay = 500;
+
+                // Step 1: Git
+                setTimeout(() => {
+                    const el = document.getElementById('stage-git');
+                    el.classList.remove('opacity-50', 'bg-slate-800');
+                    el.classList.add('opacity-100', 'border-indigo-500', 'bg-slate-700');
+                    log("Cloning repository from Git...", "text-yellow-400");
+                }, delay);
+
+                delay += 1000;
+                // Step 2: TF
+                setTimeout(() => {
+                    document.getElementById('stage-git').classList.add('opacity-50'); // Dim prev
+                    const el = document.getElementById('stage-tf');
+                    el.classList.remove('opacity-50', 'bg-slate-800');
+                    el.classList.add('opacity-100', 'border-purple-500', 'bg-slate-700', 'pulse-active');
+                    log("Terraform Init...", "text-purple-300");
+                    log("Terraform Apply: Creating 3 Resources...", "text-purple-300");
+                }, delay);
+
+                delay += 2000;
+                // Step 3: Ansible
+                setTimeout(() => {
+                    document.getElementById('stage-tf').classList.remove('pulse-active');
+                    const el = document.getElementById('stage-ans');
+                    el.classList.remove('opacity-50', 'bg-slate-800');
+                    el.classList.add('opacity-100', 'border-red-500', 'bg-slate-700', 'pulse-active');
+                    log("Ansible: Connected to inventory.", "text-red-300");
+                    log("Ansible: Installing Nginx... OK.", "text-red-300");
+                    log("Ansible: Deploying App Config... OK.", "text-red-300");
+                }, delay);
+
+                delay += 2000;
+                // Step 4: Success
+                setTimeout(() => {
+                    document.getElementById('stage-ans').classList.remove('pulse-active');
+                    const el = document.getElementById('stage-ver');
+                    el.classList.remove('opacity-50', 'bg-slate-800');
+                    el.classList.add('opacity-100', 'border-green-500', 'bg-green-900');
+                    log("Pipeline Finished Successfully.", "text-green-400 font-bold");
+                }, delay);
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
+
+
+

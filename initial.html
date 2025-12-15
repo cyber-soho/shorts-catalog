@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Logistics Navigator 2025: Educational Pathways</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Slate (Neutral Base), Teal (High-Tech), Emerald (Foundations), Indigo (Strategic), Orange (Undergrad/Action). 
+         Background: Slate-50 for a clean, academic yet modern feel. -->
+
+    <!-- Application Structure Plan: 
+         1. Hero Section "The Pathfinder": An interactive Goal Selector based on the report's Summary Matrix. This aligns user intent ("I want to build systems") with course recommendations.
+         2. Analytical Dashboard: Two visualizations (Donut & Radar) to provide a high-level view of the curriculum landscape and skill balance (Tech vs Ops vs Strategy) before diving into details.
+         3. Course Explorer: A robust tabbed interface. Crucially, it now includes a specific "Core Foundations" tab to address the previous missing content (Incoterms, Transport Modes), alongside Intersection, Graduate, Undergraduate, and Tools.
+         4. Interactive Cards: Detailed data objects rendered as cards. Each card displays key metadata (Level, Focus, Intersection) and allows users to see the specific syllabus details.
+         5. Logic: Vanilla JS handles state (current filter), updates the DOM, and re-renders Chart.js instances dynamically based on the filtered dataset.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Goal Selector (Hero): Goal: Organize/Guide. Users self-select their career path.
+         2. Curriculum Distribution (Donut Chart): Goal: Inform. Shows the balance between new Tech courses and traditional Foundations.
+         3. Skill DNA (Radar Chart): Goal: Compare. Visualizes the "shape" of a category (e.g., Foundations are high in Ops/Law, Intersection is high in Tech/Innovation).
+         4. Course Cards: Goal: Inform/Organize. Digestible summaries of the text report.
+         5. "Foundation" Highlights: Goal: Emphasis. Special styling for Section 4 content to ensure it stands out as the "roots" of the industry.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+
+        /* MANDATORY CHART CONTAINER STYLING */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Base height */
+            max-height: 400px;
+        }
+
+        /* Scrollbar hiding for clean tab navigation */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-teal-100 selection:text-teal-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <span class="text-2xl">📦</span>
+                        <h1 class="font-bold text-xl tracking-tight text-slate-900">
+                            Logistics<span class="text-teal-600">Navigator</span><span class="text-slate-400 font-light">2025</span>
+                        </h1>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-8">
+                    <button onclick="scrollToSection('pathfinder')" class="text-slate-500 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Pathfinder</button>
+                    <button onclick="scrollToSection('dashboard')" class="text-slate-500 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Analysis</button>
+                    <button onclick="scrollToSection('explorer')" class="text-slate-500 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Courses</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+        <!-- Section 1: Introduction & Pathfinder -->
+        <section id="pathfinder" class="space-y-8">
+            <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Find Your Path in the New Supply Chain</h2>
+                <p class="text-lg text-slate-600 leading-relaxed">
+                    The logistics landscape of late 2025 requires a balance of <strong>core foundations</strong> (Trade, Transport, Warehousing) and <strong>cutting-edge tech</strong> (AI, Digital Twins). Select a goal below to filter the curriculum.
+                </p>
+            </div>
+
+            <!-- Goal Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Goal 1 -->
+                <button onclick="filterByGoal('systems')" class="group text-left bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-teal-500 hover:shadow-md transition-all relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-teal-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <span class="text-3xl mb-4 block">🏗️</span>
+                        <h3 class="font-bold text-slate-900 text-lg group-hover:text-teal-600 transition-colors">Build Systems</h3>
+                        <p class="text-sm text-slate-500 mt-2">I want to design networks, simulate flows, and architect digital twins.</p>
+                        <div class="mt-4 text-xs font-semibold text-teal-600 flex items-center gap-1">
+                            View Path <span>&rarr;</span>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Goal 2 -->
+                <button onclick="filterByGoal('people')" class="group text-left bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-500 hover:shadow-md transition-all relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <span class="text-3xl mb-4 block">🛡️</span>
+                        <h3 class="font-bold text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">Manage Risk</h3>
+                        <p class="text-sm text-slate-500 mt-2">I want to lead teams, handle compliance, cybersecurity, and ESG.</p>
+                        <div class="mt-4 text-xs font-semibold text-indigo-600 flex items-center gap-1">
+                            View Path <span>&rarr;</span>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Goal 3 -->
+                <button onclick="filterByGoal('data')" class="group text-left bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-500 hover:shadow-md transition-all relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <span class="text-3xl mb-4 block">📊</span>
+                        <h3 class="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">Analyze Data</h3>
+                        <p class="text-sm text-slate-500 mt-2">I want to forecast demand, model scenarios, and use GenAI for insights.</p>
+                        <div class="mt-4 text-xs font-semibold text-blue-600 flex items-center gap-1">
+                            View Path <span>&rarr;</span>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Goal 4 -->
+                <button onclick="filterByGoal('operations')" class="group text-left bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <span class="text-3xl mb-4 block">⚙️</span>
+                        <h3 class="font-bold text-slate-900 text-lg group-hover:text-emerald-600 transition-colors">Run Operations</h3>
+                        <p class="text-sm text-slate-500 mt-2">I want to master the daily flow: Warehousing, Transport, and ERPs.</p>
+                        <div class="mt-4 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                            View Path <span>&rarr;</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Section 2: Analytical Dashboard -->
+        <section id="dashboard" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+            <div class="mb-6 pb-4 border-b border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-900">Curriculum Landscape</h2>
+                <p class="text-slate-500 text-sm mt-1">Real-time analysis of the currently selected course courses.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Donut Chart -->
+                <div class="flex flex-col items-center">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Course Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4 text-center max-w-xs">
+                        Shows the breakdown of courses available within the current filter.
+                    </p>
+                </div>
+
+                <!-- Radar Chart -->
+                <div class="flex flex-col items-center">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Skill DNA Profile</h3>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4 text-center max-w-xs">
+                        Visualizes the emphasis on Tech, Strategy, and Operations for the selected path.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Course Explorer -->
+        <section id="explorer" class="space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 pb-2 border-b border-slate-200">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900">Course Explorer</h2>
+                    <p id="filter-status" class="text-slate-500 mt-1">Showing all available courses</p>
+                </div>
+                
+                <!-- Filter Tabs -->
+                <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
+                    <button onclick="setTab('all')" class="filter-tab px-4 py-2 rounded-full text-sm font-medium transition-all border border-slate-200 bg-slate-800 text-white whitespace-nowrap active" data-tab="all">All</button>
+                    
+                    <button onclick="setTab('foundation')" class="filter-tab px-4 py-2 rounded-full text-sm font-medium transition-all border border-slate-200 bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 whitespace-nowrap" data-tab="foundation">
+                        🌱 Foundations
+                    </button>
+                    
+                    <button onclick="setTab('intersection')" class="filter-tab px-4 py-2 rounded-full text-sm font-medium transition-all border border-slate-200 bg-white text-slate-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 whitespace-nowrap" data-tab="intersection">
+                        🚀 High-Tech
+                    </button>
+                    
+                    <button onclick="setTab('graduate')" class="filter-tab px-4 py-2 rounded-full text-sm font-medium transition-all border border-slate-200 bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 whitespace-nowrap" data-tab="graduate">
+                        🎓 Graduate
+                    </button>
+                    
+                    <button onclick="setTab('undergraduate')" class="filter-tab px-4 py-2 rounded-full text-sm font-medium transition-all border border-slate-200 bg-white text-slate-600 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200 whitespace-nowrap" data-tab="undergraduate">
+                        🎒 Undergrad
+                    </button>
+                    
+                    <button onclick="setTab('tools')" class="filter-tab px-4 py-2 rounded-full text-sm font-medium transition-all border border-slate-200 bg-white text-slate-600 hover:bg-gray-100 hover:text-gray-800 whitespace-nowrap" data-tab="tools">
+                        🛠️ Tools
+                    </button>
+                </div>
+            </div>
+
+            <!-- Course Grid -->
+            <div id="course-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 min-h-[400px]">
+                <!-- Cards injected via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-20 py-10">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            <p class="mb-2">"Future of Logistics: Course Guide (Late 2025 Edition)"</p>
+            <p>&copy; 2025, CyberSoho. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JS Logic -->
+    <script>
+        // --- DATASET (Derived from Source Report) ---
+        const courses = [
+            // 1. Intersection (High-Tech)
+            {
+                id: 1,
+                title: "Generative AI for Supply Chain Optimization",
+                category: "intersection",
+                level: "Graduate / Professional",
+                focus: "AI Scenario Planning",
+                intersection: "AI & Logistics",
+                desc: "Moving beyond basic automation to using GenAI for scenario planning, complex vendor contracts, and dynamic routing.",
+                syllabus: "Prompt Engineering for Logistics, LLMs for ERP Data Querying.",
+                tags: ["AI", "GenAI", "Routing"],
+                goals: ["data", "systems"]
+            },
+            {
+                id: 2,
+                title: "Digital Twins in Supply Chain Logistics",
+                category: "intersection",
+                level: "Graduate / Certificate",
+                focus: "Simulation & Stress-Testing",
+                intersection: "Simulation Science",
+                desc: "Creating virtual replicas of physical supply chains to stress-test scenarios (e.g., port closures).",
+                syllabus: "Simulation modeling, AnyLogic/AnyLogistix software, predictive analytics.",
+                tags: ["Simulation", "Digital Twin", "Modeling"],
+                goals: ["systems"]
+            },
+            {
+                id: 3,
+                title: "Blockchain for Trade & Traceability",
+                category: "intersection",
+                level: "Undergrad / Bootcamp",
+                focus: "Smart Contracts & Provenance",
+                intersection: "FinTech & Supply Chain",
+                desc: "Smart contracts for automated freight payments and immutable ledgers for verifying goods provenance.",
+                syllabus: "Trust Economy, removing intermediaries, pharmaceutical cold chain verification.",
+                tags: ["Blockchain", "FinTech", "Contracts"],
+                goals: ["systems", "people"]
+            },
+            {
+                id: 4,
+                title: "Cybersecurity in Supply Chain Management",
+                category: "intersection",
+                level: "Professional Certificate",
+                focus: "Upstream Defense",
+                intersection: "Cybersecurity & Procurement",
+                desc: "Defending against upstream attacks where hackers compromise vendors to access larger systems.",
+                syllabus: "Vendor risk assessment, secure IoT protocols, NIST cybersecurity frameworks.",
+                tags: ["Cybersecurity", "Risk", "IoT"],
+                goals: ["people"]
+            },
+            {
+                id: 5,
+                title: "Sustainable Logistics & Scope 3 Reporting",
+                category: "intersection",
+                level: "Graduate / Elective",
+                focus: "ESG & Carbon Footprinting",
+                intersection: "Env. Science & Data",
+                desc: "Learning to calculate and report carbon footprints for entire value chains using real-time data.",
+                syllabus: "Scope 3 emissions calculation, green logistics strategies.",
+                tags: ["ESG", "Sustainability", "Compliance"],
+                goals: ["people", "data"]
+            },
+
+            // 2. Graduate
+            {
+                id: 6,
+                title: "M.Sc. in Digital Supply Chain Transformation",
+                category: "graduate",
+                level: "Master of Science",
+                focus: "Legacy Migration",
+                intersection: "Digital Transformation",
+                desc: "Heavily focuses on how to migrate legacy supply chains to cloud-based, AI-driven ecosystems.",
+                syllabus: "Data Science for Business, IoT in Operations, Change Management.",
+                tags: ["Strategy", "IoT", "Cloud"],
+                goals: ["systems", "people"]
+            },
+            {
+                id: 7,
+                title: "MBA: Global Trade & Risk Management",
+                category: "graduate",
+                level: "MBA Specialization",
+                focus: "Geopolitical Risk",
+                intersection: "Risk Mgmt & Law",
+                desc: "Uses 'War Gaming' simulations to prepare for global disruptions (pandemics, trade wars).",
+                syllabus: "Geopolitical Risk Analysis, Trade Compliance Law, Financial Hedging.",
+                tags: ["MBA", "Risk", "Law"],
+                goals: ["people"]
+            },
+            {
+                id: 8,
+                title: "Master of Applied Data Science (Logistics)",
+                category: "graduate",
+                level: "Master of Science",
+                focus: "ML for Forecasting",
+                intersection: "Data Science & Ops",
+                desc: "Pure data science degree with projects/case studies focused exclusively on logistics datasets.",
+                syllabus: "ML for Demand Forecasting, Big Data Infrastructure, Python for Ops Research.",
+                tags: ["Data Science", "ML", "Python"],
+                goals: ["data"]
+            },
+
+            // 3. Undergraduate
+            {
+                id: 9,
+                title: "B.Comm in Supply Chain Management",
+                category: "undergraduate",
+                level: "Bachelor's (Digital Track)",
+                focus: "Procurement & E-Comm",
+                intersection: "Business & Coding",
+                desc: "Foundational degree updated for 2025. Includes mandatory coding credits alongside procurement.",
+                syllabus: "E-Commerce Fulfillment, Drone/Autonomous Logistics, Human-Robot Collaboration.",
+                tags: ["B.Comm", "Robotics", "E-Commerce"],
+                goals: ["people", "operations"]
+            },
+            {
+                id: 10,
+                title: "B.Sc. in Transportation Systems",
+                category: "undergraduate",
+                level: "Bachelor of Science",
+                focus: "Physics of Transport",
+                intersection: "Engineering & Planning",
+                desc: "Focuses on the physics, engineering, and network planning of moving goods.",
+                syllabus: "Urban Mobility, Smart Cities, Intermodal Freight Systems, Last-Mile Design.",
+                tags: ["Engineering", "Transport", "Planning"],
+                goals: ["systems", "operations"]
+            },
+            {
+                id: 11,
+                title: "Diploma in Procurement & Strategic Sourcing",
+                category: "undergraduate",
+                level: "Diploma",
+                focus: "Financial/Human Side",
+                intersection: "Finance & Negotiation",
+                desc: "Focuses on the financial side of the chain. Where algorithms meet negotiation.",
+                syllabus: "E-Procurement Platforms (Coupa, Ariba), Algorithmic Pricing Negotiation.",
+                tags: ["Procurement", "Negotiation", "Sourcing"],
+                goals: ["people", "operations"]
+            },
+
+            // 4. FOUNDATIONS (The New Section)
+            {
+                id: 12,
+                title: "International Trade & Incoterms® 2020/30",
+                category: "foundation",
+                level: "Professional Certificate",
+                focus: "Global Trade Rules",
+                intersection: "Law & Commerce",
+                desc: "The non-negotiable legal and commercial rules of global trade. You cannot automate what you don't understand.",
+                syllabus: "Incoterms (EXW, FOB, DDP), Transfer of Risk vs Cost, Customs Procedures, Letters of Credit.",
+                tags: ["Incoterms", "Trade Law", "Customs"],
+                goals: ["operations", "people"]
+            },
+            {
+                id: 13,
+                title: "Fundamentals of Multimodal Transportation",
+                category: "foundation",
+                level: "Undergrad / Associate",
+                focus: "Mechanics of Freight",
+                intersection: "Operations Fundamentals",
+                desc: "The mechanics of moving freight via Air, Sea, Road, and Rail.",
+                syllabus: "Air (ULDs, AWB), Sea (TEU/FEU, Bills of Lading), Road (Hours of Service), Rail (Intermodal).",
+                tags: ["Transport", "Freight", "Logistics"],
+                goals: ["operations"]
+            },
+            {
+                id: 14,
+                title: "Warehouse Management & Storage Strategies",
+                category: "foundation",
+                level: "Diploma / Certificate",
+                focus: "Inventory & Storage",
+                intersection: "Facility Mgmt",
+                desc: "Strategies for storing and handling inventory efficiently.",
+                syllabus: "Racking systems, Bonded Warehouses, FTZ, Cross-docking, Picking strategies (FIFO/LIFO).",
+                tags: ["Warehousing", "Inventory", "Storage"],
+                goals: ["operations"]
+            },
+
+            // 5. Tools
+            {
+                id: 15,
+                title: "Excel & Data Modeling",
+                category: "tools",
+                level: "Non-Credit / Bootcamp",
+                focus: "Analysis & Network Design",
+                intersection: "Data Analysis",
+                desc: "Advanced Excel skills for everyday analysis and mathematical decision making.",
+                syllabus: "Pivot Tables, Solver for routing, Power Query, Center of Gravity models.",
+                tags: ["Excel", "Solver", "Modeling"],
+                goals: ["data"]
+            },
+            {
+                id: 16,
+                title: "ERP & Software Systems",
+                category: "tools",
+                level: "Certification",
+                focus: "SAP, Oracle, Dynamics",
+                intersection: "Enterprise Software",
+                desc: "Certifications in the major ERPs that run global supply chains.",
+                syllabus: "SAP S/4HANA (Order-to-Cash), NetSuite (Inventory), Dynamics 365.",
+                tags: ["ERP", "SAP", "Oracle"],
+                goals: ["operations", "data"]
+            },
+            {
+                id: 17,
+                title: "Data Visualization & Analytics",
+                category: "tools",
+                level: "Bootcamp",
+                focus: "Dashboards & KPI",
+                intersection: "BI",
+                desc: "Building 'Control Tower' dashboards for real-time freight status.",
+                syllabus: "Power BI, Tableau for Operations, SQL for Logistics Analysts.",
+                tags: ["PowerBI", "SQL", "Tableau"],
+                goals: ["data"]
+            }
+        ];
+
+        // --- CHART INSTANCES ---
+        let donutChart = null;
+        let radarChart = null;
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            renderCourses(courses); // Show all initially
+        });
+
+        // --- LOGIC: FILTERING ---
+        function setTab(tabName) {
+            // Update UI
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('bg-slate-800', 'text-white');
+                    btn.classList.remove('bg-white', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-slate-800', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-600');
+                }
+            });
+
+            // Filter Data
+            let filtered = courses;
+            if (tabName !== 'all') {
+                filtered = courses.filter(c => c.category === tabName);
+            }
+
+            document.getElementById('filter-status').innerText = `Showing ${filtered.length} courses in category: ${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
+            renderCourses(filtered);
+            updateCharts(filtered);
+        }
+
+        function filterByGoal(goal) {
+            // Reset tabs to 'All' visually, but apply goal filter
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-600');
+            });
+            document.querySelector('[data-tab="all"]').classList.add('bg-slate-800', 'text-white');
+            document.querySelector('[data-tab="all"]').classList.remove('bg-white', 'text-slate-600');
+
+            const filtered = courses.filter(c => c.goals.includes(goal));
+            document.getElementById('filter-status').innerText = `Recommended courses for goal: ${goal.toUpperCase()}`;
+            
+            renderCourses(filtered);
+            updateCharts(filtered);
+            scrollToSection('explorer');
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- LOGIC: RENDERING ---
+        function renderCourses(data) {
+            const grid = document.getElementById('course-grid');
+            grid.innerHTML = '';
+
+            if (data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400">No courses found matching this criteria.</div>`;
+                return;
+            }
+
+            data.forEach(c => {
+                // Color Logic based on Category
+                let accentColor = "border-slate-200";
+                let badgeClass = "bg-slate-100 text-slate-600";
+                let icon = "📚";
+
+                if (c.category === 'intersection') {
+                    accentColor = "hover:border-teal-500";
+                    badgeClass = "bg-teal-50 text-teal-700 border border-teal-100";
+                    icon = "🚀";
+                } else if (c.category === 'foundation') {
+                    accentColor = "hover:border-emerald-500";
+                    badgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-100";
+                    icon = "🌱";
+                } else if (c.category === 'graduate') {
+                    accentColor = "hover:border-indigo-500";
+                    badgeClass = "bg-indigo-50 text-indigo-700 border border-indigo-100";
+                    icon = "🎓";
+                } else if (c.category === 'undergraduate') {
+                    accentColor = "hover:border-orange-500";
+                    badgeClass = "bg-orange-50 text-orange-700 border border-orange-100";
+                    icon = "🎒";
+                } else if (c.category === 'tools') {
+                    accentColor = "hover:border-gray-500";
+                    badgeClass = "bg-gray-100 text-gray-700 border border-gray-200";
+                    icon = "🛠️";
+                }
+
+                const html = `
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between card-hover cursor-default transition-colors ${accentColor} fade-in">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="${badgeClass} px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide flex items-center gap-1">
+                                    ${icon} ${c.category}
+                                </span>
+                            </div>
+                            
+                            <h3 class="text-lg font-bold text-slate-900 leading-tight mb-2">${c.title}</h3>
+                            <p class="text-xs text-slate-500 font-medium mb-3 uppercase tracking-wide">${c.level}</p>
+                            
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                ${c.desc}
+                            </p>
+
+                            <div class="bg-slate-50 p-3 rounded-lg mb-4 border border-slate-100">
+                                <p class="text-xs text-slate-500">
+                                    <span class="font-semibold text-slate-700">Syllabus Highlights:</span> ${c.syllabus}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
+                            ${c.tags.map(tag => `<span class="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded-full text-slate-500">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += html;
+            });
+        }
+
+        // --- CHARTS LOGIC ---
+        function initCharts() {
+            // 1. Donut Chart (Distribution)
+            const ctxDonut = document.getElementById('distributionChart').getContext('2d');
+            donutChart = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High-Tech', 'Foundations', 'Graduate', 'Undergrad', 'Tools'],
+                    datasets: [{
+                        data: [1, 1, 1, 1, 1], // Placeholder
+                        backgroundColor: [
+                            '#0d9488', // Teal (High Tech)
+                            '#10b981', // Emerald (Foundations)
+                            '#4f46e5', // Indigo (Grad)
+                            '#f97316', // Orange (Undergrad)
+                            '#64748b'  // Slate (Tools)
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 15, font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // 2. Radar Chart (Skills)
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['Technology', 'Strategy', 'Operations', 'Finance/Legal', 'Innovation'],
+                    datasets: [{
+                        label: 'Skill Emphasis',
+                        data: [5, 5, 5, 5, 5],
+                        fill: true,
+                        backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                        borderColor: '#0d9488',
+                        pointBackgroundColor: '#0d9488',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#0d9488'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: { font: { size: 11, family: 'Inter' }, color: '#475569' },
+                            ticks: { display: false, max: 10 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(visibleCourses) {
+            // Update Donut
+            const counts = { intersection: 0, foundation: 0, graduate: 0, undergraduate: 0, tools: 0 };
+            visibleCourses.forEach(c => { if(counts[c.category] !== undefined) counts[c.category]++; });
+            
+            donutChart.data.datasets[0].data = [
+                counts.intersection, counts.foundation, counts.graduate, counts.undergraduate, counts.tools
+            ];
+            donutChart.update();
+
+            // Update Radar (Calculate Averages)
+            // Scores define the "DNA" of each category
+            const scores = {
+                intersection:   { tech: 9, strat: 6, ops: 4,  fin: 2, innov: 10 },
+                foundation:     { tech: 2, strat: 4, ops: 10, fin: 8, innov: 2 }, // High Ops/Legal
+                graduate:       { tech: 6, strat: 10, ops: 5, fin: 7, innov: 8 },
+                undergraduate:  { tech: 4, strat: 5, ops: 8,  fin: 5, innov: 5 },
+                tools:          { tech: 8, strat: 2, ops: 9,  fin: 4, innov: 4 }
+            };
+
+            let totals = { tech: 0, strat: 0, ops: 0, fin: 0, innov: 0 };
+            const count = visibleCourses.length;
+
+            if (count > 0) {
+                visibleCourses.forEach(c => {
+                    const s = scores[c.category];
+                    totals.tech += s.tech;
+                    totals.strat += s.strat;
+                    totals.ops += s.ops;
+                    totals.fin += s.fin;
+                    totals.innov += s.innov;
+                });
+                radarChart.data.datasets[0].data = [
+                    totals.tech / count,
+                    totals.strat / count,
+                    totals.ops / count,
+                    totals.fin / count,
+                    totals.innov / count
+                ];
+            } else {
+                radarChart.data.datasets[0].data = [0,0,0,0,0];
+            }
+            radarChart.update();
+        }
+    </script>
+</body>
+</html>

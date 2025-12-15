@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Engineering Transition - Course Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Terminal Animations */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #cbd5e1;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Pipeline Connector Lines (CSS Shapes) */
+        .pipeline-arrow {
+            position: relative;
+        }
+        .pipeline-arrow::after {
+            content: '→';
+            font-size: 24px;
+            color: #94a3b8;
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            transform: translateY(-50%);
+        }
+        @media (max-width: 768px) {
+            .pipeline-arrow::after {
+                content: '↓';
+                top: auto;
+                bottom: -25px;
+                right: 50%;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+    <!-- Chosen Palette: Professional "DevOps" Theme.
+         Background: Slate-50 (Clean, modern).
+         Primary: Indigo-600 (Tech/Engineering).
+         Accents: Blue-500 (Cloud), Emerald-500 (Success/Scripting), Amber-500 (Warnings/Attention).
+    -->
+    
+    <!-- Application Structure Plan:
+         1. Dashboard Overview: High-level metrics (45 Hours, 5 Modules) and the visual journey description.
+         2. The Tech Stack (Interactive Grid): Cards representing the 7 key technologies (Bash, PS, Python, XML, JSON, YAML, HCL). Clicking them updates a central "Terminal" to show code snippets.
+         3. Curriculum Roadmap: Detailed breakdown of the 5 modules.
+         4. Data Format Playground: A specific interactive comparison tool for XML vs JSON vs YAML (Module 4 focus).
+         5. Capstone Pipeline: A visual step-by-step simulation of the final project workflow.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Methodology Chart (Doughnut): Visualizes the 30/70 Theory/Lab split.
+         - Hours Distribution (Bar Chart): Shows the weight of each module (Python being the heaviest at 12h).
+         - Code Terminal: Increases engagement by showing "real" syntax for the languages mentioned in the report.
+         - Pipeline Visualizer: Demystifies the "Polyglot Pipeline" capstone concept.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🚀</span>
+                    <div>
+                        <h1 class="font-bold text-xl text-slate-900 tracking-tight">DevOps<span class="text-indigo-600">Transition</span></h1>
+                        <p class="text-[10px] text-slate-500 font-mono hidden sm:block">OPS TO ENGINEERING BRIDGE</p>
+                    </div>
+                </div>
+                <div class="flex space-x-1 sm:space-x-4 items-center overflow-x-auto">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 transition-colors whitespace-nowrap">Overview</button>
+                    <button onclick="app.navigate('stack')" id="nav-stack" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Tech Stack</button>
+                    <button onclick="app.navigate('curriculum')" id="nav-curriculum" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Modules</button>
+                    <button onclick="app.navigate('capstone')" id="nav-capstone" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap">Pipeline</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-4rem)]">
+        <!-- Content injected by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium text-slate-300">DevOps Engineering Transition: Scripting & Infrastructure Languages</p>
+            <p class="text-xs mt-2 opacity-60">45 Hours • Non-Credited • Emplois-Québec Format</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        const courseData = {
+            meta: {
+                title: "DevOps Engineering Transition",
+                duration: "45 Hours",
+                audience: ["SysAdmins", "NetEng", "SecOps"],
+                methodology: { theory: 30, labs: 70 }
+            },
+            modules: [
+                { id: 1, title: "Linux Automation (Bash)", hours: 9, icon: "🐚", color: "border-slate-500" },
+                { id: 2, title: "Windows/Cloud (PowerShell)", hours: 9, icon: "⚡", color: "border-blue-500" },
+                { id: 3, title: "Python for DevOps", hours: 12, icon: "🐍", color: "border-yellow-500" },
+                { id: 4, title: "Data Serialization", hours: 6, icon: "📄", color: "border-green-500" },
+                { id: 5, title: "IaC & Capstone", hours: 9, icon: "🏗️", color: "border-purple-500" }
+            ],
+            stack: {
+                bash: { title: "Bash", icon: "🐚", snippet: "#!/bin/bash\n# Automate Log Rotation\nif [ -f \"/var/log/syslog\" ]; then\n  mv /var/log/syslog /var/log/syslog.old\n  systemctl restart rsyslog\nfi", desc: "Master Linux system tasks, pipes, and redirection." },
+                powershell: { title: "PowerShell", icon: "⚡", snippet: "# Object-Oriented Pipeline\nGet-Service | Where-Object {$_.Status -eq 'Stopped'} | Start-Service\n# Cloud Management\nConnect-AzAccount", desc: "Manage Windows and Cloud environments with objects." },
+                python: { title: "Python", icon: "🐍", snippet: "import requests\nimport json\n\n# API Interaction\nresponse = requests.get('https://api.infra.com/status')\nstatus = response.json()['status']\nprint(f'System Status: {status}')", desc: "Interact with APIs and build robust tools." },
+                data: { title: "JSON/YAML/XML", icon: "📄", snippet: "---\n# YAML Configuration\nserver:\n  host: 192.168.1.10\n  roles:\n    - web\n    - db", desc: "Read, write, and validate configuration formats." },
+                hcl: { title: "HCL (Terraform)", icon: "🏗️", snippet: "resource \"aws_instance\" \"web\" {\n  ami           = \"ami-12345678\"\n  instance_type = \"t2.micro\"\n  tags = {\n    Name = \"DevOps-Web\"\n  }\n}", desc: "Write scalable Infrastructure as Code." }
+            },
+            pipelineSteps: [
+                { step: 1, title: "Fetch Data", tool: "Python", icon: "🐍", desc: "Script queries an API to get current infrastructure requirements." },
+                { step: 2, title: "Serialize", tool: "JSON", icon: "brackets", desc: "Raw data is parsed and structure validated." },
+                { step: 3, title: "Configure", tool: "YAML", icon: "📄", desc: "Python converts JSON data into a YAML configuration file." },
+                { step: 4, title: "Deploy", tool: "Terraform (HCL)", icon: "🏗️", desc: "Terraform reads YAML and provisions resources." },
+                { step: 5, title: "Verify", tool: "Bash/PS", icon: "✅", desc: "Shell script verifies the deployment is active." }
+            ]
+        };
+
+        const app = {
+            view: 'dashboard',
+            
+            init() {
+                this.navigate('dashboard');
+            },
+
+            navigate(target) {
+                this.view = target;
+                this.updateNav();
+                
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fade-in';
+
+                switch(target) {
+                    case 'dashboard': this.renderDashboard(wrapper); break;
+                    case 'stack': this.renderStack(wrapper); break;
+                    case 'curriculum': this.renderCurriculum(wrapper); break;
+                    case 'capstone': this.renderCapstone(wrapper); break;
+                }
+                root.appendChild(wrapper);
+            },
+
+            updateNav() {
+                const navs = ['dashboard', 'stack', 'curriculum', 'capstone'];
+                navs.forEach(n => {
+                    const btn = document.getElementById(`nav-${n}`);
+                    if (n === this.view) {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 transition-colors whitespace-nowrap";
+                    } else {
+                        btn.className = "px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors whitespace-nowrap";
+                    }
+                });
+            },
+
+            renderDashboard(container) {
+                // Intro
+                container.innerHTML = `
+                    <div class="mb-10 text-center">
+                        <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Bridge the Gap</h2>
+                        <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                            A 45-hour intensive journey designed to transform System Administrators and Network Specialists into 
+                            code-proficient DevOps Engineers.
+                        </p>
+                    </div>
+                `;
+
+                // Stats Grid
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-3 gap-6 mb-10";
+                
+                const stats = [
+                    { label: "Total Duration", val: "45 Hours", icon: "⏱️" },
+                    { label: "Core Modules", val: "5 Units", icon: "📚" },
+                    { label: "Lab Focus", val: "70% Practical", icon: "💻" }
+                ];
+
+                stats.forEach(s => {
+                    grid.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+                            <span class="text-3xl bg-indigo-50 p-3 rounded-lg">${s.icon}</span>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">${s.label}</p>
+                                <p class="text-2xl font-bold text-slate-800">${s.val}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(grid);
+
+                // Charts Area
+                const charts = document.createElement('div');
+                charts.className = "grid grid-cols-1 lg:grid-cols-2 gap-8";
+
+                // Methodology Chart
+                const methodCard = document.createElement('div');
+                methodCard.className = "bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col";
+                methodCard.innerHTML = `
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Teaching Methodology</h3>
+                    <p class="text-sm text-slate-500 mb-4">Heavy emphasis on hands-on scripting and debugging.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="methodChart"></canvas>
+                    </div>
+                `;
+
+                // Module Breakdown Chart
+                const moduleCard = document.createElement('div');
+                moduleCard.className = "bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col";
+                moduleCard.innerHTML = `
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Time Distribution</h3>
+                    <p class="text-sm text-slate-500 mb-4">Hours allocated per technology module.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="moduleChart"></canvas>
+                    </div>
+                `;
+
+                charts.appendChild(methodCard);
+                charts.appendChild(moduleCard);
+                container.appendChild(charts);
+
+                // Initialize Charts
+                setTimeout(() => {
+                    this.initCharts();
+                }, 100);
+            },
+
+            initCharts() {
+                // Doughnut
+                new Chart(document.getElementById('methodChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Theory', 'Practical Labs'],
+                        datasets: [{
+                            data: [30, 70],
+                            backgroundColor: ['#e2e8f0', '#4f46e5'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Bar
+                new Chart(document.getElementById('moduleChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Bash', 'PowerShell', 'Python', 'Data Fmts', 'IaC/HCL'],
+                        datasets: [{
+                            label: 'Hours',
+                            data: [9, 9, 12, 6, 9],
+                            backgroundColor: ['#64748b', '#3b82f6', '#eab308', '#22c55e', '#a855f7'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            },
+
+            renderStack(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">The Technology Stack</h2>
+                        <p class="text-slate-600 mt-2">Click on a technology to view its role in the course and a code sample.</p>
+                    </div>
+                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "grid grid-cols-1 lg:grid-cols-3 gap-8";
+
+                // Sidebar Selection
+                const list = document.createElement('div');
+                list.className = "space-y-3 lg:col-span-1";
+                
+                Object.keys(courseData.stack).forEach(key => {
+                    const item = courseData.stack[key];
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-400 hover:shadow-md transition-all flex items-center gap-3 group focus:ring-2 focus:ring-indigo-500";
+                    btn.innerHTML = `
+                        <span class="text-2xl group-hover:scale-110 transition-transform">${item.icon}</span>
+                        <div>
+                            <span class="font-bold text-slate-800 block">${item.title}</span>
+                            <span class="text-xs text-slate-500">View Snippet</span>
+                        </div>
+                    `;
+                    btn.onclick = () => this.updateTerminal(key);
+                    list.appendChild(btn);
+                });
+
+                // Terminal View
+                const terminal = document.createElement('div');
+                terminal.className = "lg:col-span-2 bg-slate-900 rounded-xl shadow-lg border border-slate-700 overflow-hidden flex flex-col";
+                terminal.innerHTML = `
+                    <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div id="term-title" class="text-slate-400 text-xs font-mono">select_lang.exe</div>
+                        <div></div>
+                    </div>
+                    <div class="p-6 flex-grow font-mono text-sm overflow-auto">
+                        <div id="term-desc" class="text-indigo-400 mb-4 font-bold">// Select a language from the list</div>
+                        <pre id="term-code" class="text-slate-300"></pre>
+                        <div class="mt-4 text-slate-400">
+                            <span class="text-emerald-500">➜</span> <span class="cursor-blink"></span>
+                        </div>
+                    </div>
+                `;
+
+                wrapper.appendChild(list);
+                wrapper.appendChild(terminal);
+                container.appendChild(wrapper);
+            },
+
+            updateTerminal(key) {
+                const data = courseData.stack[key];
+                document.getElementById('term-title').innerText = `${key}_preview`;
+                document.getElementById('term-desc').innerText = `// ${data.desc}`;
+                
+                const codeBlock = document.getElementById('term-code');
+                codeBlock.innerText = "";
+                
+                // Typing effect
+                let i = 0;
+                const txt = data.snippet;
+                const speed = 15;
+                
+                function typeWriter() {
+                    if (i < txt.length) {
+                        codeBlock.innerHTML += txt.charAt(i);
+                        i++;
+                        setTimeout(typeWriter, speed);
+                    }
+                }
+                typeWriter();
+            },
+
+            renderCurriculum(container) {
+                container.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900">Curriculum Roadmap</h2>
+                        <p class="text-slate-600 mt-2">A detailed breakdown of the 5 learning modules.</p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = "space-y-6 max-w-4xl mx-auto";
+
+                courseData.modules.forEach((mod, idx) => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white border-l-4 ${mod.color} rounded-r-xl shadow-sm p-6 relative overflow-hidden`;
+                    
+                    let content = "";
+                    if (mod.id === 1) {
+                         content = `<ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                            <li>Bash Fundamentals & Environment</li>
+                            <li>Advanced Scripting Logic (if/else, loops)</li>
+                            <li>System Admin Automation (grep, awk, sed)</li>
+                        </ul>`;
+                    } else if (mod.id === 2) {
+                        content = `<ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                            <li>The Object-Oriented Pipeline</li>
+                            <li>Scripting & Tool Building (Try/Catch)</li>
+                            <li>Remote Management (WinRM, Azure)</li>
+                        </ul>`;
+                    } else if (mod.id === 3) {
+                        content = `<ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                            <li>Python Core Concepts (Lists, Dicts)</li>
+                            <li>System Interaction (os, subprocess)</li>
+                            <li>API Integration (Requests library)</li>
+                        </ul>`;
+                    } else if (mod.id === 4) {
+                        content = `<ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                            <li>XML & JSON: Parsing and Interchanging</li>
+                            <li>YAML: Configuration Standards</li>
+                            <li>Data Validation & Conversion</li>
+                        </ul>`;
+                    } else {
+                        content = `<ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                            <li>HCL Syntax & Terraform Basics</li>
+                            <li>Managing Infrastructure State</li>
+                            <li><strong>Capstone:</strong> The Polyglot Pipeline</li>
+                        </ul>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 text-3xl bg-slate-50 p-2 rounded-lg">${mod.icon}</div>
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-xl font-bold text-slate-800">Module ${mod.id}: ${mod.title}</h3>
+                                    <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">${mod.hours} Hours</span>
+                                </div>
+                                ${content}
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+                container.appendChild(grid);
+            },
+
+            renderCapstone(container) {
+                container.innerHTML = `
+                    <div class="mb-8 text-center">
+                        <h2 class="text-3xl font-bold text-slate-900">Capstone: The Polyglot Pipeline</h2>
+                        <p class="text-slate-600 mt-2 max-w-2xl mx-auto">
+                            The final project requires integrating multiple languages into a single automated workflow.
+                            Click 'Run Pipeline' to simulate the data flow.
+                        </p>
+                    </div>
+                `;
+
+                // Pipeline Visualization
+                const pipelineBox = document.createElement('div');
+                pipelineBox.className = "bg-white p-8 rounded-xl shadow-lg border border-slate-200 overflow-x-auto";
+                
+                const stepsContainer = document.createElement('div');
+                stepsContainer.className = "flex min-w-[800px] justify-between items-center relative";
+                
+                courseData.pipelineSteps.forEach((step, idx) => {
+                    const stepEl = document.createElement('div');
+                    stepEl.id = `pipe-step-${idx}`;
+                    stepEl.className = `pipeline-step relative flex flex-col items-center p-4 rounded-lg border-2 border-slate-200 bg-slate-50 transition-all duration-500 w-40 ${idx < courseData.pipelineSteps.length - 1 ? 'pipeline-arrow' : ''}`;
+                    
+                    stepEl.innerHTML = `
+                        <div class="text-3xl mb-2 grayscale transition-all duration-500" id="pipe-icon-${idx}">${step.icon}</div>
+                        <h4 class="font-bold text-slate-700 text-sm mb-1">${step.title}</h4>
+                        <span class="text-[10px] text-slate-500 uppercase font-bold">${step.tool}</span>
+                    `;
+                    stepsContainer.appendChild(stepEl);
+                });
+                
+                pipelineBox.appendChild(stepsContainer);
+
+                // Controls
+                const controls = document.createElement('div');
+                controls.className = "mt-8 flex justify-center flex-col items-center gap-4";
+                
+                controls.innerHTML = `
+                    <div id="pipeline-log" class="h-12 text-sm font-mono text-indigo-600 font-bold transition-all">Ready to start...</div>
+                    <button onclick="app.runPipeline()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-all active:scale-95">
+                        ▶ Run Simulation
+                    </button>
+                `;
+
+                container.appendChild(pipelineBox);
+                container.appendChild(controls);
+            },
+
+            runPipeline() {
+                const log = document.getElementById('pipeline-log');
+                const steps = courseData.pipelineSteps;
+                
+                // Reset
+                steps.forEach((_, idx) => {
+                    const el = document.getElementById(`pipe-step-${idx}`);
+                    const icon = document.getElementById(`pipe-icon-${idx}`);
+                    el.classList.remove('border-emerald-500', 'bg-emerald-50', 'scale-105', 'shadow-md');
+                    el.classList.add('border-slate-200', 'bg-slate-50');
+                    icon.classList.add('grayscale');
+                });
+
+                let current = 0;
+
+                function activateStep() {
+                    if (current >= steps.length) {
+                        log.innerText = "✅ Pipeline Execution Successful!";
+                        log.classList.add('text-emerald-600');
+                        return;
+                    }
+
+                    const stepData = steps[current];
+                    log.innerText = `> Executing: ${stepData.desc}...`;
+                    log.classList.remove('text-emerald-600');
+
+                    const el = document.getElementById(`pipe-step-${current}`);
+                    const icon = document.getElementById(`pipe-icon-${current}`);
+                    
+                    el.classList.remove('border-slate-200', 'bg-slate-50');
+                    el.classList.add('border-emerald-500', 'bg-emerald-50', 'scale-105', 'shadow-md');
+                    icon.classList.remove('grayscale');
+
+                    current++;
+                    setTimeout(activateStep, 1200);
+                }
+
+                activateStep();
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
+
+
+
